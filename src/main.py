@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import uvicorn
 
 from src.auth.router import router as auth_router
 from src.photos.router import router as photos_router
@@ -14,3 +15,8 @@ app.include_router(tags_router, prefix="/api")
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+@app.get("/api/healthchecker")
+async def healthchecker():
+    return {"message": "Welcome to FastAPI"}
