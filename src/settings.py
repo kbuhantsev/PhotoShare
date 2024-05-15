@@ -3,11 +3,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # DB
-    user: str
-    password: str
-    db_name: str = "photo_share"
-    domain: str = "localhost"
-    port: str = "5432"
+    postgres_user: str
+    postgres_password: str
+    postgres_db_name: str = "photo_share"
+    postgres_domain: str = "localhost"
+    postgres_port: str = "5432"
 
     # JWT
     # secret_key: str
@@ -26,12 +26,10 @@ class Settings(BaseSettings):
 
     @staticmethod
     def get_db_uri():
-        return f"postgresql+asyncpg://{settings.user}:{settings.password}@{settings.domain}:{settings.port}/{settings.db_name}"
+        return f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_domain}:{settings.postgres_port}/{settings.postgres_db_name}"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
 
