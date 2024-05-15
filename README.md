@@ -5,5 +5,5 @@ GoIt command project PhotoShare (FastAPI)
 ## RUN Docker 
 
 ```sh
-    docker compose up -d 
+docker compose up -d 
 ```

@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-import uvicorn
 
 from src.auth.router import router as auth_router
 from src.photos.router import router as photos_router
