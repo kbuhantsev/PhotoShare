@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     postgres_port: str = "5432"
 
     # JWT
-    # secret_key: str
-    # algorithm: str = "HS256"
-    # access_token_expire_minutes: int = 60
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
 
     # REDIS
     # redis_host: str = "localhost"
