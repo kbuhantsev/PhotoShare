@@ -15,7 +15,7 @@ from src.user.schemas import (
     UserSchema,
     UserResponseSchema,
 )
-from src.auth.schemas import TokenSchema
+from src.auth.schemas import TokenSchema, ForgotPasswordTokenSchema
 
 from src.user import service as users
 from src.auth.services.auth import auth_service
@@ -163,6 +163,7 @@ async def refresh_token(
 
 @router.post(
     "/forget_password",
+    response_model=ForgotPasswordTokenSchema,
     # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
 )
 async def forget_password(
@@ -199,10 +200,10 @@ async def forget_password(
     #     str(request.base_url),
     # )
     # return {"message": "Check your email for confirmation link"}
-    reset_token = await auth_service.create_password_reset_token(exsisting_user.email)
+    reset_token = await auth_service.create_password_reset_token(data ={"sub":exsisting_user.email})
     return {
         "message": "For reset password use this token in endpoint /reset_password",
-        "token": reset_token,
+        "reset_token": reset_token,
     }
 
 
