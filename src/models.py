@@ -11,7 +11,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
 base_metadata = MetaData()
-rating_metadata = MetaData()
 
 
 class Base(DeclarativeBase):
@@ -25,7 +24,6 @@ class Base(DeclarativeBase):
 
 class Rating(Base):
     __tablename__ = "ratings"
-    metadata = rating_metadata
     photo_id: Mapped[int] = mapped_column(
         ForeignKey("photos.id", ondelete="CASCADE", onupdate="CASCADE")
     )

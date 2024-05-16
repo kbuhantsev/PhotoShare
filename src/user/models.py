@@ -4,7 +4,7 @@ from sqlalchemy import Enum, String, MetaData
 
 from src.models import Base
 
-user_metadata = MetaData()
+# user_metadata = MetaData()
 
 
 class Role(enum.Enum):
@@ -15,7 +15,7 @@ class Role(enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
-    metadata = user_metadata
+    # metadata = user_metadata
     role: Mapped[Enum] = mapped_column(Enum(Role), default=Role.USER)
     username: Mapped[str] = mapped_column(String(25))
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True)

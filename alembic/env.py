@@ -13,7 +13,11 @@ import sys
 sys.path.append(os.path.join(sys.path[0], "src"))
 
 from src.settings import Settings
-from src.user.models import user_metadata
+from src.models import Base, Rating
+from src.photos.models import Photo
+from src.tags.models import Tag
+from src.user.models import User
+from src.comments.models import Comment
 
 URI = Settings.get_db_uri()
 
@@ -31,9 +35,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
-target_metadata = [
-    user_metadata,
-]
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
