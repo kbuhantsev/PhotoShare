@@ -1,10 +1,17 @@
-# Global models
-
-from sqlalchemy import Integer, func, DateTime, MetaData
+from sqlalchemy import (
+    Integer,
+    func,
+    DateTime,
+    MetaData,
+    ForeignKey,
+    SmallInteger,
+    CheckConstraint,
+)
 
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
 base_metadata = MetaData()
+rating_metadata = MetaData()
 
 
 class Base(DeclarativeBase):
@@ -14,3 +21,20 @@ class Base(DeclarativeBase):
     updated_at: Mapped[DateTime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now()
     )
+
+
+class Rating(Base):
+    __tablename__ = "ratings"
+    metadata = rating_metadata
+    photo_id: Mapped[int] = mapped_column(
+        ForeignKey("photos.id", ondelete="CASCADE", onupdate="CASCADE")
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE")
+    )
+    rating: Mapped[int] = mapped_column(
+        SmallInteger(), CheckConstraint("rating >= 1 and rating <= 5")
+    )
+
+    def __repr__(self):
+        return f"Rating(photo_id={self.photo_id}, user_id={self.user_id}, rating={self.rating})"
