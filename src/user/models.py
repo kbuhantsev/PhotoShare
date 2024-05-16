@@ -1,8 +1,8 @@
 import enum
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Enum, String
+from sqlalchemy import Enum, String, MetaData
 
-from src.database import Base
+from src.models import Base
 
 
 class Role(enum.Enum):
@@ -19,3 +19,6 @@ class User(Base):
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     refresh_token: Mapped[str] = mapped_column(String, nullable=True)
     avatar: Mapped[str] = mapped_column(String(255), nullable=True)
+
+    def __repr__(self):
+        return f"User(name={self.username}, role={self.role})"
