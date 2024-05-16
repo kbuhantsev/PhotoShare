@@ -10,6 +10,9 @@ from alembic import context
 from src.settings import settings
 from src.models import Base
 from src.user.models import User, Role
+from src.photos.models import Photo
+from src.tags.models import Tag
+from src.comments.models import Comment
 
 
 # this is the Alembic Config object, which provides
@@ -95,4 +98,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
