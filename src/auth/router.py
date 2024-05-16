@@ -200,7 +200,10 @@ async def forget_password(
     # )
     # return {"message": "Check your email for confirmation link"}
     reset_token = await auth_service.create_password_reset_token(exsisting_user.email)
-    return {"message": "For reset password use this token in endpoint /reset_password", "token": reset_token}
+    return {
+        "message": "For reset password use this token in endpoint /reset_password",
+        "token": reset_token,
+    }
 
 
 @router.post(

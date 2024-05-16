@@ -1,8 +1,22 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.user.models import User, Role
 from src.user.schemas import UserSchema
+
+
+async def get_count_users(db: AsyncSession):
+    """
+    Count users.
+
+    :param db: database connection
+    :type db: AsyncSession
+    :return: number of users
+    :rtype: int
+    """
+    query = select(func.count(User.id))
+    result = await db.execute(query)
+    return result.scalar()
 
 
 async def get_user_by_email(email: str, db: AsyncSession):
@@ -38,6 +52,9 @@ async def create_user(body: UserSchema, db: AsyncSession):
     :rtype: User
     """
     user = User(**body.model_dump(exclude_unset=True))
+    count_users = await get_count_users(db)
+    if count_users == 0:
+        user.role = Role.ADMIN
     db.add(user)
     await db.commit()
     await db.refresh(user)
