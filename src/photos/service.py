@@ -1,14 +1,17 @@
 from typing import BinaryIO
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.user.models import User
 
 
 async def create_photo(
     *,
     title: str,
     file: BinaryIO,
-    folder: str,
-    public_id: str,
-    secure_url: str,
+    description: str,
     tags: list[str],
+    db: AsyncSession,
+    current_user: User
 ):
     pass
 

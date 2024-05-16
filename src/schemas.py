@@ -2,5 +2,5 @@ from pydantic import BaseModel
 
 
 class ResponseModel(BaseModel):
-    status: str
-    message: str
+    status: str = "ok"
+    message: str = ""

@@ -1,9 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from typing import Annotated
 
 from fastapi import File, Form, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from service import create_photo
+from src.photos.service import create_photo
+from src.database import get_db
+from src.photos.schemas import PhotoResponseSchema
+from src.user.models import User
 
 router = APIRouter(
     prefix="/photos",
@@ -21,30 +25,37 @@ async def get_photo(photo_id: int):
     return {"message": "Hello World"}
 
 
-@router.post("/",
-             status_code=status.HTTP_201_CREATED,
-             response_model=None)
+@router.post(
+    "/", status_code=status.HTTP_201_CREATED, response_model=PhotoResponseSchema
+)
 async def create_photo(
     title: Annotated[str, Form()],
     file: Annotated[UploadFile, File()],
-    folder: Annotated[str, Form()],
-    public_id: Annotated[str, Form()],
-    secure_url: Annotated[str, Form()],
+    description: Annotated[str, Form()],
     tags: Annotated[list[str], Form()],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(),
 ):
 
     photo = await create_photo(
         title=title,
         file=file.file,
-        folder=folder,
-        public_id=public_id,
-        secure_url=secure_url,
+        description=description,
         tags=tags,
+        db=db,
+        current_user=current_user,
     )
 
+    response = PhotoResponseSchema()
 
+    if not photo:
+        response.status = "error"
+        response.message = "An error occurred while creating the photo!"
+        return response
 
-    return {"message": "Hello World"}
+    response = PhotoResponseSchema()
+    response.data = photo
+    return response
 
 
 @router.put("/{photo_id}")
