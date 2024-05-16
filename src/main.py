@@ -15,6 +15,11 @@ app.include_router(user_router, prefix="/api")
 app.include_router(comments_router, prefix="/api")
 
 
+@app.on_event("startup")
+async def startup():
+    print("Starting up...")
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
