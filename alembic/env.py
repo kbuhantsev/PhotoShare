@@ -1,17 +1,15 @@
 import asyncio
 from logging.config import fileConfig
-import os
-import sys
 
-from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# sys.path.append(os.path.join(sys.path[0], "src"))
-
 from src.settings import settings
 from src.models import Base
+from src.user.models import User, Role
 
 
 # this is the Alembic Config object, which provides
