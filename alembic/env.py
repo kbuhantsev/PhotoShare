@@ -1,3 +1,4 @@
+import asyncio
 from logging.config import fileConfig
 import os
 import sys
@@ -7,7 +8,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-sys.path.append(os.path.join(sys.path[0], "src"))
+# sys.path.append(os.path.join(sys.path[0], "src"))
 
 from src.settings import settings
 from src.models import Base
