@@ -7,19 +7,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-import os
-import sys
-
-sys.path.append(os.path.join(sys.path[0], "src"))
-
-from src.settings import Settings
+from src.settings import settings
 from src.models import Base, Rating
 from src.photos.models import Photo
 from src.tags.models import Tag
 from src.user.models import User
 from src.comments.models import Comment
 
-URI = Settings.get_db_uri()
+URI = settings.get_db_uri()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
