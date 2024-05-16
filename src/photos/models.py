@@ -7,6 +7,7 @@ from src.models import Base
 class Photo(Base):
     __tablename__ = "photos"
     title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(String(255))
     owner_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE")
     )
