@@ -4,6 +4,7 @@ from src.auth.router import router as auth_router
 from src.photos.router import router as photos_router
 from src.tags.router import router as tags_router
 from src.user.router import router as user_router
+from src.comments.router import router as comments_router
 
 app = FastAPI()
 
@@ -11,6 +12,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(photos_router, prefix="/api")
 app.include_router(tags_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
+app.include_router(comments_router, prefix="/api")
 
 
 @app.get("/")
