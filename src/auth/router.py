@@ -18,7 +18,7 @@ from src.user.schemas import (
 from src.user import service as users
 from src.services.authentication import auth_service
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 get_refresh_token = HTTPBearer()
 
 
