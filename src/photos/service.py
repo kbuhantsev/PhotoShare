@@ -9,15 +9,17 @@ from src.user.models import User
 
 
 async def create_photo(
-        *,
-        title: str,
-        file: BinaryIO,
-        description: str,
-        tags: list[str],
-        db: AsyncSession,
-        current_user: User
+    *,
+    title: str,
+    file: BinaryIO,
+    description: str,
+    tags: list[str],
+    db: AsyncSession,
+    current_user: User
 ) -> Photo | None:
+
     asset = await upload_file(file, folder="photos")
+
     photo = Photo(
         title=title,
         description=description,
@@ -27,6 +29,7 @@ async def create_photo(
         folder="photos",
         tags=[Tag(name=tag) for tag in tags],
     )
+
     db.add(photo)
     await db.commit()
     await db.refresh(photo)
@@ -34,13 +37,14 @@ async def create_photo(
 
 
 async def update_photo(
-        *,
-        photo_id: int,
-        title: str,
-        file: BinaryIO,
-        description: str,
-        tags: list[str],
-        db: AsyncSession) -> Photo | None:
+    *,
+    photo_id: int,
+    title: str,
+    file: BinaryIO,
+    description: str,
+    tags: list[str],
+    db: AsyncSession
+) -> Photo | None:
 
     query = select(Photo).where(Photo.id == photo_id)
     res = await db.execute(query)

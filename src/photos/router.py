@@ -5,7 +5,13 @@ from fastapi import File, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dependencies import get_current_user
-from src.photos.service import create_photo, update_photo, get_photo, delete_photo
+from src.photos.service import (
+    create_photo,
+    update_photo,
+    get_photo,
+    delete_photo,
+    get_photos,
+)
 from src.database import get_db
 from src.photos.schemas import PhotoResponseSchema
 from src.user.models import User
@@ -17,7 +23,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK)
-async def get_photos(
+async def get_photos_handler(
     skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
 ):
 
@@ -60,7 +66,7 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
 @router.post(
     "/", status_code=status.HTTP_201_CREATED, response_model=PhotoResponseSchema
 )
-async def create_photo(
+async def create_photo_handler(
     title: Annotated[str, Form()],
     file: Annotated[UploadFile, File()],
     description: Annotated[str, Form()],
