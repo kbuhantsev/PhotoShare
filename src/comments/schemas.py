@@ -3,13 +3,11 @@ from src.schemas import ResponseModel
 from typing import List
 
 
-class CommentModel(ResponseModel):
-    data: List = []
-
-
-class CommentCreate(BaseModel):
+class CommentSchema(BaseModel):
+    user_id: int
+    photo_id: int
     comment: str
 
 
-class CommentUpdate(BaseModel):
-    comment: str
+class CommentResponseSchema(ResponseModel):
+    data: CommentSchema = None
