@@ -14,3 +14,7 @@ class TokenSchema(ResponseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+class ForgotPasswordTokenSchema(ResponseModel):
+    reset_token: str
