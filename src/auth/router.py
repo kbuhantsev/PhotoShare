@@ -44,8 +44,7 @@ async def signup(body: UserSchema, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=TokenSchema)
 async def login(
-    body: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    body: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ):
     """
     Handle user login.
