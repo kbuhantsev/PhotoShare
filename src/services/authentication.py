@@ -1,5 +1,4 @@
-
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -10,7 +9,7 @@ from jose import JWTError, jwt
 
 from src.settings import settings
 from src.database import get_db
-from src.user import services as repository_users
+from src.user import service as users
 
 
 class Auth:
@@ -48,11 +47,11 @@ class Auth:
         get_email_from_token(token):
             Decodes an email verification token and returns the email if the token is valid.
     """
+
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    SECRET_KEY = settings.secret_key_jvt
+    SECRET_KEY = settings.secret_key
     ALGORITHM = settings.algorithm
     ACCESS_EXPIRES_DELTA = settings.access_token_expire_minutes
-    REFRESH_EXPIRES_DELTA = settings.refresh_token_expire_days
 
     def verify_password(self, plain_password, hashed_password):
         """
@@ -81,7 +80,9 @@ class Auth:
 
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
-    async def create_access_token(self, data: dict, expires_delta: Optional[float] = None):
+    async def create_access_token(
+        self, data: dict, expires_delta: Optional[float] = None
+    ):
         """
         Create a new access token.
 
@@ -98,14 +99,20 @@ class Auth:
         """
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.now(timezone.utc) + timedelta(minutes=expires_delta)
+            expire = datetime.now(UTC) + timedelta(minutes=expires_delta)
         else:
-            expire = datetime.now(timezone.utc) + timedelta(minutes=self.ACCESS_EXPIRES_DELTA)
-        to_encode.update({"iat": datetime.now(timezone.utc), "exp": expire, "scope": "access_token"})
-        encoded_access_token = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
+            expire = datetime.now(UTC) + timedelta(minutes=self.ACCESS_EXPIRES_DELTA)
+        to_encode.update(
+            {"iat": datetime.now(UTC), "exp": expire, "scope": "access_token"}
+        )
+        encoded_access_token = jwt.encode(
+            to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM
+        )
         return encoded_access_token
 
-    async def create_refresh_token(self, data: dict, expires_delta: Optional[float] = None):
+    async def create_refresh_token(
+        self, data: dict, expires_delta: Optional[float] = None
+    ):
         """
         Create a new refresh token.
 
@@ -122,11 +129,15 @@ class Auth:
         """
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.now(timezone.utc) + timedelta(seconds=expires_delta)
+            expire = datetime.now(UTC) + timedelta(seconds=expires_delta)
         else:
-            expire = datetime.now(timezone.utc) + timedelta(days=self.REFRESH_EXPIRES_DELTA)
-        to_encode.update({"iat": datetime.now(timezone.utc), "exp": expire, "scope": "refresh_token"})
-        encoded_refresh_token = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
+            expire = datetime.now(UTC) + timedelta(days=7)
+        to_encode.update(
+            {"iat": datetime.now(UTC), "exp": expire, "scope": "refresh_token"}
+        )
+        encoded_refresh_token = jwt.encode(
+            to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM
+        )
         return encoded_refresh_token
 
     async def decode_refresh_token(self, refresh_token: str):
@@ -144,15 +155,25 @@ class Auth:
         """
 
         try:
-            payload = jwt.decode(refresh_token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
-            if payload['scope'] == 'refresh_token':
-                email = payload['sub']
+            payload = jwt.decode(
+                refresh_token, self.SECRET_KEY, algorithms=[self.ALGORITHM]
+            )
+            if payload["scope"] == "refresh_token":
+                email = payload["sub"]
                 return email
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid scope for token')
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid scope for token",
+            )
         except JWTError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate credentials')
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+            )
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    async def get_current_user(
+        self, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+    ):
         """
         Retrieve the current user based on the provided token and database session.
 
@@ -175,7 +196,7 @@ class Auth:
         try:
             # Decode JWT
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
-            if payload['scope'] == 'access_token':
+            if payload["scope"] == "access_token":
                 email = payload["sub"]
                 if email is None:
                     raise credentials_exception
@@ -184,13 +205,13 @@ class Auth:
         except JWTError as e:
             raise credentials_exception
 
-        user = await repository_users.get_user_by_email(email, db)
+        user = await users.get_user_by_email(email, db)
         if user is None:
             raise credentials_exception
         return user
 
-# дві остані функції створені для пиревірки email користувачя
-# не обовяскові можна видалити
+    # дві остані функції створені для пиревірки email користувачя
+    # не обовяскові можна видалити
     def create_email_token(self, data: dict):
         """
         Create an email verification token.
@@ -202,8 +223,8 @@ class Auth:
             str: The encoded email verification token.
         """
         to_encode = data.copy()
-        expire = datetime.now(timezone.utc) + timedelta(days=1)
-        to_encode.update({"iat": datetime.now(timezone.utc), "exp": expire})
+        expire = datetime.now(UTC) + timedelta(days=1)
+        to_encode.update({"iat": datetime.now(UTC), "exp": expire})
         token = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return token
 
@@ -227,8 +248,10 @@ class Auth:
             return email
         except JWTError as e:
             print(e)
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail="Invalid token for email verification")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid token for email verification",
+            )
 
 
 auth_service = Auth()

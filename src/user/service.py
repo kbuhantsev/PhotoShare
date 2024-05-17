@@ -1,15 +1,26 @@
-
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from src.database import get_db
-from src.user.models import User
+from src.user.models import Role, User
 from src.user.schemas import UserSchema
 
 
-async def get_user_by_email(email: str, db: AsyncSession = Depends(get_db)):
+async def get_count_users(db: AsyncSession):
+    """
+    Count users.
+
+    :param db: database connection
+    :type db: AsyncSession
+    :return: number of users
+    :rtype: int
+    """
+    query = select(func.count(User.id))
+    result = await db.execute(query)
+    return result.scalar()
+
+
+async def get_user_by_email(email: str, db: AsyncSession):
     """
     Retrieve a user by their email from the database.
 
@@ -29,7 +40,7 @@ async def get_user_by_email(email: str, db: AsyncSession = Depends(get_db)):
     return user
 
 
-async def create_user(body: UserSchema, db: AsyncSession = Depends(get_db)):
+async def create_user(body: UserSchema, db: AsyncSession):
     """
     Create a new user and save it to the database.
 
@@ -43,6 +54,9 @@ async def create_user(body: UserSchema, db: AsyncSession = Depends(get_db)):
         User: The newly created user.
     """
     new_user = User(**body.model_dump())
+    count_users = await get_count_users(db)
+    if count_users == 0:
+        new_user.role = Role.ADMIN
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)

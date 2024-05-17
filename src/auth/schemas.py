@@ -1,10 +1,9 @@
-# pydantic models
-
-
 from pydantic import BaseModel
 
+from src.schemas import ResponseModel
 
-class TokenSchema(BaseModel):
+
+class TokenSchema(ResponseModel):
     """
     Pydantic model for returning access and refresh tokens.
 

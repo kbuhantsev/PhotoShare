@@ -1,7 +1,7 @@
 from fastapi import Request, Depends, HTTPException, status
 
 from src.user.models import Role, User
-from src.auth.authentication import auth_service
+from services.authentication import auth_service
 
 
 class RoleAccess:
@@ -19,10 +19,13 @@ class RoleAccess:
             is in the list of allowed roles. If the user's role is not allowed, it raises an HTTPException with
             a 403 status code.
     """
+
     def __init__(self, allowed_roles: list[Role]):
         self.allowed_roles = allowed_roles
 
-    async def __call__(self, request: Request, user: User = Depends(auth_service.get_current_user)):
+    async def __call__(
+        self, request: Request, user: User = Depends(auth_service.get_current_user)
+    ):
         """
         Check if the user's role is allowed to access the endpoint.
 
@@ -41,6 +44,5 @@ class RoleAccess:
         print(user.role, self.allowed_roles)
         if user.role not in self.allowed_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="FORBIDDEN"
+                status_code=status.HTTP_403_FORBIDDEN, detail="FORBIDDEN"
             )
