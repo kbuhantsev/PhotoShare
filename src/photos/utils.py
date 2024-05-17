@@ -1,3 +1,5 @@
+from typing import BinaryIO
+
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -12,7 +14,7 @@ cloudinary.config(
 )
 
 
-def upload_file(file, folder: str):
+def upload_file(file: BinaryIO, folder: str):
     asset = cloudinary.uploader.upload(
         file,
         folder=folder,

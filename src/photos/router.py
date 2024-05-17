@@ -1,10 +1,10 @@
 from fastapi import APIRouter, status, Depends
 from typing import Annotated
 
-from fastapi import File, Form, UploadFile
+from fastapi import File, Form, UploadFile, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.dependencies import get_current_user
+from src.dependencies import get_current_user
 from src.photos.service import (
     create_photo,
     update_photo,
@@ -27,16 +27,16 @@ async def get_photos_handler(
     skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
 ):
 
-    response = PhotoResponseSchema()
+    response_model = PhotoResponseSchema()
 
     try:
         photos = await get_photos(skip=skip, limit=limit, db=db)
-        response.data = photos
-        return response
+        response_model.data = photos
+        return response_model
     except Exception as e:
-        response.status = "error"
-        response.message = "An error occurred while getting the photos!"
-        return response
+        response_model.status = "error"
+        response_model.message = "An error occurred while getting the photos!"
+        return response_model
 
 
 @router.get(
@@ -44,38 +44,41 @@ async def get_photos_handler(
 )
 async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
 
-    response = PhotoResponseSchema()
+    response_model = PhotoResponseSchema()
 
     try:
         photo = await get_photo(photo_id=photo_id, db=db)
     except Exception as e:
-        response.status = "error"
-        response.message = "An error occurred while getting the photo!"
-        return response
+        response_model.status = "error"
+        response_model.message = "An error occurred while getting the photo!"
+        return response_model
 
     if not photo:
-        response.status = "error"
-        response.message = "An error occurred while getting the photo!"
-        return response
+        response_model.status = "error"
+        response_model.message = "An error occurred while getting the photo!"
+        return response_model
 
-    response = PhotoResponseSchema()
-    response.data = photo
-    return response
+    response_model = PhotoResponseSchema()
+    response_model.data = photo
+    return response_model
 
 
 @router.post(
-    "/", status_code=status.HTTP_201_CREATED, response_model=PhotoResponseSchema
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PhotoResponseSchema,
 )
 async def create_photo_handler(
+    response: Response,
     title: Annotated[str, Form()],
     file: Annotated[UploadFile, File()],
     description: Annotated[str, Form()],
-    tags: Annotated[list[str], Form()],
+    tags: Annotated[list[str], Form()] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
 
-    response = PhotoResponseSchema()
+    response_model = PhotoResponseSchema()
 
     try:
         photo = await create_photo(
@@ -87,13 +90,16 @@ async def create_photo_handler(
             current_user=current_user,
         )
     except Exception as e:
-        response.status = "error"
-        response.message = "An error occurred while creating the photo!"
+        print(e)
+        response_model.status = "error"
+        response_model.message = "An error occurred while creating the photo!"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return response
 
     if not photo:
-        response.status = "error"
-        response.message = "An error occurred while creating the photo!"
+        response_model.status = "error"
+        response_model.message = "An error occurred while creating the photo!"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return response
 
     response = PhotoResponseSchema()
@@ -105,6 +111,7 @@ async def create_photo_handler(
     "/{photo_id}", status_code=status.HTTP_200_OK, response_model=PhotoResponseSchema
 )
 async def update_photo_by_id(
+    response: Response,
     photo_id: int,
     title: Annotated[str, Form()],
     file: Annotated[UploadFile, File()],
@@ -114,7 +121,7 @@ async def update_photo_by_id(
     current_user: User = Depends(get_current_user),
 ):
 
-    response = PhotoResponseSchema()
+    response_model = PhotoResponseSchema()
 
     try:
         photo = await update_photo(
@@ -124,40 +131,47 @@ async def update_photo_by_id(
             description=description,
             tags=tags,
             db=db,
+            current_user=current_user,
         )
     except Exception as e:
-        response.status = "error"
-        response.message = "An error occurred while updating the photo!"
-        return response
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while updating the photo!"
+        return response_model
 
     if not photo:
-        response.status = "error"
-        response.message = "An error occurred while updating the photo!"
-        return response
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while updating the photo!"
+        return response_model
 
-    response = PhotoResponseSchema()
-    response.data = photo
-    return response
+    response_model = PhotoResponseSchema()
+    response_model.data = photo
+    return response_model
 
 
 @router.delete(
     "/{photo_id}", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK
 )
-async def delete_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_photo_by_id(
+    response: Response, photo_id: int, db: AsyncSession = Depends(get_db)
+):
 
-    response = PhotoResponseSchema()
+    response_model = PhotoResponseSchema()
 
     try:
         photo = await delete_photo(photo_id=photo_id, db=db)
     except Exception as e:
-        response.status = "error"
-        response.message = "An error occurred while deleting the photo!"
-        return response
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while deleting the photo!"
+        return response_model
 
     if not photo:
-        response.status = "error"
-        response.message = "An error occurred while deleting the photo!"
-        return response
+        response.status_code = status.HTTP_403_FORBIDDEN
+        response_model.status = "error"
+        response_model.message = "An error occurred while deleting the photo!"
+        return response_model
 
-    response = PhotoResponseSchema()
-    return response
+    response_model = PhotoResponseSchema()
+    return response_model

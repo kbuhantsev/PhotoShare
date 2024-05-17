@@ -18,7 +18,7 @@ async def create_photo(
     current_user: User
 ) -> Photo | None:
 
-    asset = await upload_file(file, folder="photos")
+    asset = upload_file(file, folder="photos")
 
     photo = Photo(
         title=title,
@@ -27,7 +27,7 @@ async def create_photo(
         public_id=asset.get("public_id"),
         secure_url=asset.get("secure_url"),
         folder="photos",
-        tags=[Tag(name=tag) for tag in tags],
+        # tags=[Tag(name=tag) for tag in tags],
     )
 
     db.add(photo)
@@ -43,7 +43,8 @@ async def update_photo(
     file: BinaryIO,
     description: str,
     tags: list[str],
-    db: AsyncSession
+    db: AsyncSession,
+    current_user: User
 ) -> Photo | None:
 
     query = select(Photo).where(Photo.id == photo_id)
