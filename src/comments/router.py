@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 from src.database import get_db
-from src.comments.schemas import CommentModel, CommentCreate, CommentUpdate
+from src.comments.schemas import CommentSchema, CommentResponseSchema
 
 from typing import List
 from src.dependencies import get_current_user
@@ -17,49 +17,111 @@ router = APIRouter(
 
 # TODO Додати обмеження на кількіть запитів
 @router.post(
-    "/", response_model=CommentModel, description="No more than 15 requests per minute"
+    "/", status_code=status.HTTP_201_CREATED, response_model=CommentResponseSchema,
+    description="No more than 15 requests per minute"
 )
-async def create_comment(
-    photo_id: int,
-    comment: CommentCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+async def create_comment_handler(
+        response: Response,
+        photo_id: int,
+        comment: CommentSchema,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ):
+    response_model = CommentResponseSchema()
+    try:
+        comment_create = await comment_services.create_comment(
+            photo_id=photo_id, comment=comment, db=db, current_user=current_user
+        )
 
-    comment_create = await comment_services.create_comment(
-        photo_id=photo_id, comment=comment, db=db, current_user=current_user
-    )
-    return comment_create
+    except Exception as e:
+        print(e)
+        response_model.status = "error"
+        response_model.message = "An error occurred while posting the comment"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response_model
 
 
-@router.get("/{photo_id}", response_model=List[CommentModel])
-async def get_comments(photo_id: int, db: AsyncSession = Depends(get_db)):
-    comment_get = await comment_services.get_comments(photo_id=photo_id, db=db)
-    return comment_get
+
+    response = CommentResponseSchema()
+    response.data = comment_create
+    return response
 
 
-@router.put("/{comment_id}", response_model=CommentModel)
-async def update_comment(
-    comment_id: int,
-    comment: CommentUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+@router.get("/{photo_id}", status_code=status.HTTP_200_OK, response_model=CommentResponseSchema)
+async def get_comments_handler(photo_id: int, response: Response, db: AsyncSession = Depends(get_db)):
+    response_model = CommentResponseSchema()
+    try:
+        comment_get = await comment_services.get_comments(photo_id=photo_id, db=db)
+    except Exception as e:
+        print(e)
+        response_model.status = "error"
+        response_model.message = "An error occurred while getting comments from this photo"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response_model
+
+    response = CommentResponseSchema()
+    response.data = comment_get
+    return response
+
+
+@router.put("/{comment_id}", response_model=CommentResponseSchema, status_code=status.HTTP_200_OK)
+async def update_comment_handler(
+        response: Response,
+        comment_id: int,
+        comment: CommentSchema,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ):
+    response_model = CommentResponseSchema()
+    try:
+        updated_comment = comment_services.update_comment(
+            comment_id=comment_id, comment=comment, db=db, current_user=current_user
+        )
+    except Exception as e:
+        print(e)
+        response_model.status = "error"
+        response_model.message = "An error occurred while updating this comment"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response_model
 
-    updated_comment = comment_services.update_comment(
-        comment_id=comment_id, comment=comment, db=db, current_user=current_user
-    )
-    return updated_comment
+    if not updated_comment:
+        response_model.status = "error"
+        response_model.message = "An error occurred while updating this comment"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response_model
+
+    response = CommentResponseSchema()
+    response.data = updated_comment
+
+    return response
 
 
-@router.delete("/{comment_id}", response_model=CommentModel)
-async def delete_comment(
-    comment_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+@router.delete("/{comment_id}", response_model=CommentResponseSchema)
+async def delete_comment_handler(
+        response: Response,
+        comment_id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ):
+    response_model = CommentResponseSchema()
+    try:
+        deleted_comment = comment_services.delete_comment(
+            comment_id=comment_id, db=db, current_user=current_user
+        )
+    except Exception as e:
+        print(e)
+        response_model.status = "error"
+        response_model.message = "An error occurred while deleting this comment"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response_model
 
-    deleted_comment = comment_services.delete_comment(
-        comment_id=comment_id, db=db, current_user=current_user
-    )
-    return deleted_comment
+    if not deleted_comment:
+        response_model.status = "error"
+        response_model.message = "An error occurred while deleting this comment"
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response_model
+
+    response = CommentResponseSchema()
+    response.data = deleted_comment
+
+    return response
