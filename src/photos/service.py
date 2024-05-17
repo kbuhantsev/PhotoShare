@@ -27,8 +27,25 @@ async def create_photo(
         public_id=asset.get("public_id"),
         secure_url=asset.get("secure_url"),
         folder="photos",
-        # tags=[Tag(name=tag) for tag in tags],
     )
+
+    tags_arr = []
+
+    if tags:
+        for tag in tags:
+            query = select(Tag).where(Tag.name == tag)
+            res = await db.execute(query)
+            tag_obj = res.scalars().one_or_none()
+            if tag_obj:
+                tags_arr.append(tag_obj)
+            else:
+                new_tag = Tag(name=tag)
+                tags_arr.append(new_tag)
+
+        await db.commit()
+        await db.flush()
+
+        photo.tags = tags_arr
 
     db.add(photo)
     await db.commit()

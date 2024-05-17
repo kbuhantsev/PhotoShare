@@ -13,7 +13,7 @@ from src.photos.service import (
     get_photos,
 )
 from src.database import get_db
-from src.photos.schemas import PhotoResponseSchema
+from src.photos.schemas import PhotoResponseSchema, PhotoSchema
 from src.user.models import User
 
 router = APIRouter(
@@ -31,9 +31,11 @@ async def get_photos_handler(
 
     try:
         photos = await get_photos(skip=skip, limit=limit, db=db)
-        response_model.data = photos
+        photos_data = [PhotoSchema(**photo.__dict__) for photo in photos]
+        response_model.data = photos_data
         return response_model
     except Exception as e:
+        print(e)
         response_model.status = "error"
         response_model.message = "An error occurred while getting the photos!"
         return response_model
@@ -73,10 +75,15 @@ async def create_photo_handler(
     title: Annotated[str, Form()],
     file: Annotated[UploadFile, File()],
     description: Annotated[str, Form()],
-    tags: Annotated[list[str], Form()] = None,
+    tags: Annotated[str, Form()] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+
+    if tags:
+        tags_list = [tag.strip() for tag in tags.split(",")]
+    else:
+        tags_list = []
 
     response_model = PhotoResponseSchema()
 
@@ -85,7 +92,7 @@ async def create_photo_handler(
             title=title,
             file=file.file,
             description=description,
-            tags=tags,
+            tags=tags_list,
             db=db,
             current_user=current_user,
         )
@@ -116,10 +123,15 @@ async def update_photo_by_id(
     title: Annotated[str, Form()],
     file: Annotated[UploadFile, File()],
     description: Annotated[str, Form()],
-    tags: Annotated[list[str], Form()],
+    tags: Annotated[str, Form()] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+
+    if tags:
+        tags_list = [tag.strip() for tag in tags.split(",")]
+    else:
+        tags_list = []
 
     response_model = PhotoResponseSchema()
 
@@ -129,7 +141,7 @@ async def update_photo_by_id(
             title=title,
             file=file.file,
             description=description,
-            tags=tags,
+            tags=tags_list,
             db=db,
             current_user=current_user,
         )
@@ -174,4 +186,5 @@ async def delete_photo_by_id(
         return response_model
 
     response_model = PhotoResponseSchema()
+    response_model.data = photo
     return response_model

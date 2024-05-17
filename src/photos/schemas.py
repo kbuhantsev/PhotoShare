@@ -8,7 +8,7 @@ class PhotoSchema(BaseModel):
     public_id: str
     secure_url: str
     folder: str
-    tags: list[str]
+    tags: list[str] = []
 
 
 class PhotoResponseSchema(ResponseModel):
