@@ -101,7 +101,12 @@ async def delete_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
 
 
 async def get_photos(skip: int, limit: int, db: AsyncSession) -> list[Photo]:
-    query = select(Photo).offset(skip).limit(limit)
+    query = (
+        select(Photo).
+        offset(skip).
+        limit(limit).
+        options(selectinload(Photo.tags))
+    )
     res = await db.execute(query)
     return list(res.scalars().all())
 

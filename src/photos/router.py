@@ -31,7 +31,19 @@ async def get_photos_handler(
 
     try:
         photos = await get_photos(skip=skip, limit=limit, db=db)
-        photos_data = [PhotoSchema(**photo.__dict__) for photo in photos]
+        photos_data = []
+        for photo in photos:
+            tags_list = [tag.name for tag in photo.tags]
+            photos_data.append(
+                PhotoSchema(
+                    title=photo.title,
+                    owner_id=photo.owner_id,
+                    public_id=photo.public_id,
+                    secure_url=photo.secure_url,
+                    folder=photo.folder,
+                    tags=tags_list if tags_list else [],
+                )
+            )
         response_model.data = photos_data
         return response_model
     except Exception as e:
