@@ -1,10 +1,10 @@
 from fastapi import Request, Depends, HTTPException, status
 
 from src.user.models import Role, User
-from services.authentication import auth_service
+from src.services.authentication import auth_service
 
 
-class RoleAccess:
+class RolesAccess:
     """
     A class to manage access control based on user roles.
 
@@ -41,8 +41,8 @@ class RoleAccess:
         Raises:
             HTTPException: If the user's role is not in the list of allowed roles.
         """
-        print(user.role, self.allowed_roles)
+        
         if user.role not in self.allowed_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="FORBIDDEN"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
             )

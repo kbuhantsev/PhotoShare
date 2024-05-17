@@ -98,3 +98,44 @@ async def update_avatar_url(email: str, url: str | None, db: AsyncSession) -> Us
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def update_password(email: User, password: str, db: AsyncSession):
+    """
+    Update user password.
+
+    :param email: user email
+    :type email: User
+    :param password: new password
+    :type password: str
+    :param db: database connection
+    :type db: AsyncSession
+
+    :return: updated user
+    :rtype: User
+    """
+    user = await get_user_by_email(email, db)
+    user.password = password
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def update_role(user: User, role: Role, db: AsyncSession):
+    """
+    Update user role.
+
+    :param user: user
+    :type user: User
+    :param role: new role
+    :type role: Role
+    :param db: database connection
+    :type db: AsyncSession
+
+    :return: updated user
+    :rtype: User
+    """
+    user.role = role
+    await db.commit()
+    await db.refresh(user)
+    return user
