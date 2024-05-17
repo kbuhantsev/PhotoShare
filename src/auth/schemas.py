@@ -1,5 +1,3 @@
-from pydantic import BaseModel
-
 from src.schemas import ResponseModel
 
 
@@ -12,6 +10,7 @@ class TokenSchema(ResponseModel):
         refresh_token (str): The refresh token for token refresh.
         token_type (str): The type of the token, which is typically "bearer".
     """
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
