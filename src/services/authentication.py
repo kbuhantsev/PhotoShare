@@ -253,5 +253,41 @@ class Auth:
                 detail="Invalid token for email verification",
             )
 
+    async def create_password_reset_token(self, data: dict):
+        """
+        Create password reset token
+
+        :param data: data
+        :type data: dict
+
+        :return: password reset token
+        :rtype: str
+        """
+        to_encode = data.copy()
+        expire = datetime.now(UTC) + timedelta(hours=3)
+        to_encode.update({"iat": datetime.now(UTC), "exp": expire})
+        encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
+        return encoded_jwt
+
+    async def decode_password_reset_token(self, token: str):
+        """
+        Decode password reset token
+
+        :param token: password reset token
+        :type token: str
+
+        :return: email
+        :rtype: str | HTTPException
+        """
+        try:
+            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            email = payload["sub"]
+            return email
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Could not validate credentials for password reset",
+            )
+
 
 auth_service = Auth()

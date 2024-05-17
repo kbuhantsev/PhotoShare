@@ -6,7 +6,7 @@ from src.comments.models import Comment
 from datetime import datetime
 from src.comments.schemas import CommentModel, CommentCreate, CommentUpdate
 from typing import List, Union
-from src.auth.dependencies import get_current_user
+from src.dependencies import get_current_user
 from src.user.models import User
 router = APIRouter(
     prefix="/comments",

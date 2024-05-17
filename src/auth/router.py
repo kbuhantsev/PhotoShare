@@ -7,8 +7,14 @@ from fastapi.security import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
-from src.auth.schemas import TokenSchema
-from src.user.schemas import UserSchema, UserResponseSchema
+from src.schemas import ResponseModel
+from src.auth.schemas import ForgotPasswordTokenSchema, TokenSchema
+from src.user.schemas import (
+    UserRequestEmailSchema,
+    UserRequestPasswordResetSchema,
+    UserSchema,
+    UserResponseSchema,
+)
 from src.user import service as users
 from src.services.authentication import auth_service
 
@@ -85,6 +91,26 @@ async def login(
     }
 
 
+@router.get("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    db: AsyncSession = Depends(get_db),
+    user: UserSchema = Depends(auth_service.get_current_user),
+):
+    """
+    Logout user endpoint
+
+    :param db: database session
+    :type db: AsyncSession
+    :param user: user
+    :type user: User
+
+    :return: None
+
+    """
+    await users.update_token(user, None, db)
+    return {}
+
+
 @router.get("/refresh_token", response_model=TokenSchema)
 async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Depends(get_refresh_token),
@@ -125,3 +151,72 @@ async def refresh_token(
         "refresh_token": refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.post(
+    "/forget_password",
+    response_model=ForgotPasswordTokenSchema,
+    # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
+)
+async def forget_password(
+    body: UserRequestEmailSchema,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Forget password endpoint
+
+    :param body: email
+    :type body: UserRequestEmailSchema
+    :param db: database session
+    :type db: AsyncSession
+
+    :return: message
+    :rtype: dict
+    """
+    exsisting_user = await users.get_user_by_email(body.email, db)
+    if not exsisting_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invalid Email address",
+        )
+
+    reset_token = await auth_service.create_password_reset_token(
+        data={"sub": exsisting_user.email}
+    )
+    return {
+        "message": "For reset password use this token in endpoint /reset_password",
+        "reset_token": reset_token,
+    }
+
+
+@router.post(
+    "/reset_password",
+    response_model=ResponseModel,
+    # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
+)
+async def reset_password(
+    body: UserRequestPasswordResetSchema,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Reset password endpoint
+
+    :param body: email
+    :type body: UserRequestPasswordResetSchema
+    :param db: database session
+    :type db: AsyncSession
+
+    :return: message
+    :rtype: dict
+    """
+    try:
+        email = await auth_service.decode_password_reset_token(body.reset_token)
+        if not email:
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+        if body.new_password != body.confirm_password:
+            raise HTTPException(status_code=400, detail="Passwords don't match")
+        hashed_password = auth_service.get_password_hash(body.new_password)
+        await users.update_password(email, hashed_password, db)
+        return {"message": "Password updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Some thing unexpected happened!")
