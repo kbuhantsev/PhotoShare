@@ -15,7 +15,9 @@ class Photo(Base):
     secure_url: Mapped[str] = mapped_column(String(255))
     folder: Mapped[str] = mapped_column(String(255))
     tags: Mapped[list["Tag"]] = relationship(
-        "Tag", secondary="photos_to_tags", back_populates="photos"
+        "Tag",
+        secondary="photos_to_tags",
+        back_populates="photos",
     )
 
     def __repr__(self):

@@ -1,6 +1,7 @@
 from typing import BinaryIO
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from src.photos.models import Photo
 from src.photos.utils import upload_file, delete_file
@@ -106,6 +107,8 @@ async def get_photos(skip: int, limit: int, db: AsyncSession) -> list[Photo]:
 
 
 async def get_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
-    query = select(Photo).where(Photo.id == photo_id)
+    query = (select(Photo).
+             where(Photo.id == photo_id).
+             options(selectinload(Photo.tags)))
     res = await db.execute(query)
     return res.scalars().one_or_none()

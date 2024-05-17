@@ -50,7 +50,19 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
 
     try:
         photo = await get_photo(photo_id=photo_id, db=db)
+        tags_list = [tag.name for tag in photo.tags]
+
+        photo_data = PhotoSchema(
+            title=photo.title,
+            owner_id=photo.owner_id,
+            public_id=photo.public_id,
+            secure_url=photo.secure_url,
+            folder=photo.folder,
+            tags=tags_list if tags_list else [],
+        )
+
     except Exception as e:
+        print(e)
         response_model.status = "error"
         response_model.message = "An error occurred while getting the photo!"
         return response_model
@@ -61,7 +73,7 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
         return response_model
 
     response_model = PhotoResponseSchema()
-    response_model.data = photo
+    response_model.data = photo_data
     return response_model
 
 
