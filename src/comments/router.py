@@ -9,7 +9,7 @@ from src.user.models import User
 from src.comments.models import Comment
 from sqlalchemy.ext.asyncio import AsyncSession
 import src.comments.service as comment_services
-
+from src.dependencies import allowed_delite_comments
 router = APIRouter(
     prefix="/comments",
     tags=["comments"],
@@ -97,13 +97,15 @@ async def update_comment_handler(
     return response.dict()
 
 
-@router.delete("/{comment_id}", response_model=CommentResponseSchema)
+@router.delete("/{comment_id}", response_model=CommentResponseSchema, dependencies=[Depends(allowed_delite_comments)])
 async def delete_comment_handler(
         response: Response,
         comment_id: int,
         db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user),
+
 ):
+
     response_model = CommentResponseSchema()
     try:
         deleted_comment = await comment_services.delete_comment(

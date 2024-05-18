@@ -9,7 +9,7 @@ from typing import List
 from src.dependencies import get_current_user
 from src.user.models import User
 from src.user.models import Role
-
+from src.dependencies import allowed_delite_comments
 async def create_comment(
     photo_id: int,
     comment: CommentSchema,
@@ -110,11 +110,12 @@ async def delete_comment(
     :return: A CommentModel instance indicating the result of the delete operation.
     :rtype: CommentModel
     """
-    if current_user.role != Role.ADMIN and current_user.role != Role.MODERATOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators and moderators can delete comments",
-        )
+    # if current_user.role != Role.ADMIN and current_user.role != Role.MODERATOR:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Only administrators and moderators can delete comments",
+    #     )
+
     result = await db.execute(select(Comment).filter(Comment.id == comment_id))
     db_comment = result.scalar_one_or_none()
     # if not db_comment:
