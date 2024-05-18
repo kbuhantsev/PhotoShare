@@ -1,13 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from src.schemas import ResponseModel
-from typing import List
+from typing import List,Optional
 
 
 class CommentSchema(BaseModel):
-    user_id: int
-    photo_id: int
-    comment: str
+    user_id: Optional[int]
+    photo_id: Optional[int]
+    comment: Optional[str]
+
 
 
 class CommentResponseSchema(ResponseModel):
-    data: CommentSchema = None
+    data: List[CommentSchema] = None
