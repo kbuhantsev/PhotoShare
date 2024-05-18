@@ -6,6 +6,7 @@ from typing import List
 from src.dependencies import get_current_user
 
 from src.user.models import User
+from src.comments.models import Comment
 from sqlalchemy.ext.asyncio import AsyncSession
 import src.comments.service as comment_services
 
@@ -49,15 +50,15 @@ async def create_comment_handler(
 
 @router.get("/{photo_id}", status_code=status.HTTP_200_OK, response_model=CommentResponseSchema)
 async def get_comments_handler(photo_id: int, response: Response, db: AsyncSession = Depends(get_db)):
-    response_model = CommentResponseSchema()
+    response_model_instance = CommentResponseSchema()
     try:
         comment_get = await comment_services.get_comments(photo_id=photo_id, db=db)
     except Exception as e:
         print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while getting comments from this photo"
+        response_model_instance.status = "error"
+        response_model_instance.message = "An error occurred while getting comments from this photo"
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
+        return response_model_instance
 
     response = CommentResponseSchema()
     response.data = comment_get
@@ -68,13 +69,13 @@ async def get_comments_handler(photo_id: int, response: Response, db: AsyncSessi
 async def update_comment_handler(
         response: Response,
         comment_id: int,
-        comment: CommentSchema,
+        comment: str,
         db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user),
 ):
     response_model = CommentResponseSchema()
     try:
-        updated_comment = comment_services.update_comment(
+        updated_comment = await comment_services.update_comment(
             comment_id=comment_id, comment=comment, db=db, current_user=current_user
         )
     except Exception as e:
@@ -82,18 +83,18 @@ async def update_comment_handler(
         response_model.status = "error"
         response_model.message = "An error occurred while updating this comment"
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
+        return response_model.dict()
 
     if not updated_comment:
         response_model.status = "error"
         response_model.message = "An error occurred while updating this comment"
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
+        return response_model.dict()
 
     response = CommentResponseSchema()
-    response.data = updated_comment
+    response.data = [updated_comment] if updated_comment is not None else []
 
-    return response
+    return response.dict()
 
 
 @router.delete("/{comment_id}", response_model=CommentResponseSchema)
@@ -105,7 +106,7 @@ async def delete_comment_handler(
 ):
     response_model = CommentResponseSchema()
     try:
-        deleted_comment = comment_services.delete_comment(
+        deleted_comment = await comment_services.delete_comment(
             comment_id=comment_id, db=db, current_user=current_user
         )
     except Exception as e:
@@ -122,6 +123,6 @@ async def delete_comment_handler(
         return response_model
 
     response = CommentResponseSchema()
-    response.data = deleted_comment
+    response.data = [deleted_comment] if deleted_comment is not None else []
 
     return response

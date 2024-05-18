@@ -8,7 +8,7 @@ from src.comments.schemas import CommentSchema, CommentResponseSchema
 from typing import List
 from src.dependencies import get_current_user
 from src.user.models import User
-
+from src.user.models import Role
 
 async def create_comment(
     photo_id: int,
@@ -42,7 +42,7 @@ async def create_comment(
 
 async def get_comments(
     photo_id: int, db: AsyncSession = Depends(get_db)
-) -> List[Comment]:
+) -> list[Comment]:
     """
     Retrieve all comments for a specific photo.
 
@@ -58,10 +58,10 @@ async def get_comments(
 
 async def update_comment(
     comment_id: int,
-    comment: CommentSchema,
+    comment: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Comment:
+) -> Comment | None:
     """
     Update an existing comment.
 
@@ -85,12 +85,12 @@ async def update_comment(
     db_comment = result.scalar_one_or_none()
     # if not db_comment:
     #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    db_comment.comment = comment.comment
+    db_comment.comment = comment
     db_comment.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(db_comment)
 
-    return result
+    return db_comment
 
 
 async def delete_comment(
@@ -110,7 +110,7 @@ async def delete_comment(
     :return: A CommentModel instance indicating the result of the delete operation.
     :rtype: CommentModel
     """
-    if current_user.role != 1 and current_user.role != 2:
+    if current_user.role != Role.ADMIN and current_user.role != Role.MODERATOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators and moderators can delete comments",
@@ -122,4 +122,4 @@ async def delete_comment(
 
     await db.delete(db_comment)
     await db.commit()
-
+    return db_comment
