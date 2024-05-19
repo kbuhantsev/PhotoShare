@@ -1,7 +1,7 @@
 from typing import BinaryIO
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 
 from src.photos.models import Photo
 from src.photos.utils import upload_file, delete_file
@@ -10,15 +10,14 @@ from src.user.models import User
 
 
 async def create_photo(
-    *,
-    title: str,
-    file: BinaryIO,
-    description: str,
-    tags: list[str],
-    db: AsyncSession,
-    current_user: User
+        *,
+        title: str,
+        file: BinaryIO,
+        description: str,
+        tags: list[str],
+        db: AsyncSession,
+        current_user: User
 ) -> Photo | None:
-
     asset = upload_file(file, folder="photos")
 
     photo = Photo(
@@ -43,9 +42,6 @@ async def create_photo(
                 new_tag = Tag(name=tag)
                 tags_arr.append(new_tag)
 
-        await db.commit()
-        await db.flush()
-
         photo.tags = tags_arr
 
     db.add(photo)
@@ -55,16 +51,18 @@ async def create_photo(
 
 
 async def update_photo(
-    *,
-    photo_id: int,
-    title: str,
-    file: BinaryIO,
-    description: str,
-    tags: list[str],
-    db: AsyncSession,
+        *,
+        photo_id: int,
+        title: str,
+        file: BinaryIO,
+        description: str,
+        tags: list[str],
+        db: AsyncSession,
 ) -> Photo | None:
-
-    query = select(Photo).where(Photo.id == photo_id)
+    query = (select(Photo).
+             where(Photo.id == photo_id).
+             options(selectinload(Photo.tags))
+             )
     res = await db.execute(query)
     photo = res.scalars().first()
     if not photo:
@@ -82,18 +80,21 @@ async def update_photo(
             else:
                 new_tag = Tag(name=tag)
                 tags_arr.append(new_tag)
-
         await db.commit()
-        await db.flush()
 
-    photo.tags = tags_arr
+    if len(tags_arr) > 0:
+        photo.tags = tags_arr
 
-    asset = await upload_file(file, folder="photos")
-    photo.title = title
-    photo.description = description
-    photo.public_id = asset.get("public_id")
-    photo.secure_url = asset.get("secure_url")
-    photo.folder = "photos"
+    if title:
+        photo.title = title
+    if description:
+        photo.description = description
+    if file:
+        asset = upload_file(file, folder="photos")
+        photo.public_id = asset.get("public_id")
+        photo.secure_url = asset.get("secure_url")
+        photo.folder = "photos"
+
     await db.commit()
     await db.refresh(photo)
     return photo

@@ -24,9 +24,8 @@ router = APIRouter(
 
 @router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
-    skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
+        skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
 ):
-
     response_model = PhotoResponseSchema()
 
     try:
@@ -45,19 +44,19 @@ async def get_photos_handler(
                 )
             )
         response_model.data = photos_data
-        return response_model
+
     except Exception as e:
         print(e)
         response_model.status = "error"
         response_model.message = "An error occurred while getting the photos!"
-        return response_model
+
+    return response_model
 
 
 @router.get(
     "/{photo_id}", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK
 )
 async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
-
     response_model = PhotoResponseSchema()
 
     try:
@@ -72,7 +71,7 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
             folder=photo.folder,
             tags=tags_list if tags_list else [],
         )
-
+        response_model.data = photo_data
     except Exception as e:
         print(e)
         response_model.status = "error"
@@ -84,8 +83,6 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
         response_model.message = "An error occurred while getting the photo!"
         return response_model
 
-    response_model = PhotoResponseSchema()
-    response_model.data = photo_data
     return response_model
 
 
@@ -95,15 +92,14 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
     response_model=PhotoResponseSchema,
 )
 async def create_photo_handler(
-    response: Response,
-    title: Annotated[str, Form()],
-    file: Annotated[UploadFile, File()],
-    description: Annotated[str, Form()],
-    tags: Annotated[str, Form()] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+        response: Response,
+        title: Annotated[str, Form()],
+        file: Annotated[UploadFile, File()],
+        description: Annotated[str, Form()],
+        tags: Annotated[str, Form()] = None,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ):
-
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
     else:
@@ -120,38 +116,47 @@ async def create_photo_handler(
             db=db,
             current_user=current_user,
         )
+
+        photo_data = PhotoSchema(
+            id=photo.id,
+            title=photo.title,
+            owner_id=photo.owner_id,
+            public_id=photo.public_id,
+            secure_url=photo.secure_url,
+            folder=photo.folder,
+            tags=tags_list if tags_list else [],
+        )
+        response_model.data = photo_data
+
     except Exception as e:
         print(e)
         response_model.status = "error"
         response_model.message = "An error occurred while creating the photo!"
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response
+        return response_model
 
     if not photo:
         response_model.status = "error"
         response_model.message = "An error occurred while creating the photo!"
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response
+        return response_model
 
-    response = PhotoResponseSchema()
-    response.data = photo
-    return response
+    return response_model
 
 
 @router.put(
     "/{photo_id}", status_code=status.HTTP_200_OK, response_model=PhotoResponseSchema
 )
 async def update_photo_by_id(
-    response: Response,
-    photo_id: int,
-    title: Annotated[str, Form()],
-    file: Annotated[UploadFile, File()],
-    description: Annotated[str, Form()],
-    tags: Annotated[str, Form()] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+        response: Response,
+        photo_id: int,
+        title: Annotated[str, Form()] = None,
+        file: Annotated[UploadFile, File()] = None,
+        description: Annotated[str, Form()] = None,
+        tags: Annotated[str, Form()] = None,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ):
-
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
     else:
@@ -163,12 +168,25 @@ async def update_photo_by_id(
         photo = await update_photo(
             photo_id=photo_id,
             title=title,
-            file=file.file,
+            file=file.file if file else None,
             description=description,
             tags=tags_list,
             db=db,
         )
+
+        photo_data = PhotoSchema(
+            id=photo.id,
+            title=photo.title,
+            owner_id=photo.owner_id,
+            public_id=photo.public_id,
+            secure_url=photo.secure_url,
+            folder=photo.folder,
+            tags=tags_list if tags_list else [],
+        )
+        response_model.data = photo_data
+
     except Exception as e:
+        print(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         response_model.status = "error"
         response_model.message = "An error occurred while updating the photo!"
@@ -180,8 +198,6 @@ async def update_photo_by_id(
         response_model.message = "An error occurred while updating the photo!"
         return response_model
 
-    response_model = PhotoResponseSchema()
-    response_model.data = photo
     return response_model
 
 
@@ -189,9 +205,8 @@ async def update_photo_by_id(
     "/{photo_id}", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK
 )
 async def delete_photo_by_id(
-    response: Response, photo_id: int, db: AsyncSession = Depends(get_db)
+        response: Response, photo_id: int, db: AsyncSession = Depends(get_db)
 ):
-
     response_model = PhotoResponseSchema()
 
     try:
@@ -206,6 +221,7 @@ async def delete_photo_by_id(
             folder=photo.folder,
             tags=tags_list if tags_list else [],
         )
+        response_model.data = photo_data
     except Exception as e:
         print(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -219,6 +235,4 @@ async def delete_photo_by_id(
         response_model.message = "An error occurred while deleting the photo!"
         return response_model
 
-    response_model = PhotoResponseSchema()
-    response_model.data = photo_data
     return response_model
