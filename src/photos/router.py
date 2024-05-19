@@ -13,7 +13,7 @@ from src.photos.service import (
     get_photos,
 )
 from src.database import get_db
-from src.photos.schemas import PhotoResponseSchema, PhotoSchema
+from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema
 from src.user.models import User
 
 router = APIRouter(
@@ -22,7 +22,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK)
+@router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
     skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
 ):
@@ -167,7 +167,6 @@ async def update_photo_by_id(
             description=description,
             tags=tags_list,
             db=db,
-            current_user=current_user,
         )
     except Exception as e:
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -197,7 +196,18 @@ async def delete_photo_by_id(
 
     try:
         photo = await delete_photo(photo_id=photo_id, db=db)
+        tags_list = [tag.name for tag in photo.tags]
+
+        photo_data = PhotoSchema(
+            title=photo.title,
+            owner_id=photo.owner_id,
+            public_id=photo.public_id,
+            secure_url=photo.secure_url,
+            folder=photo.folder,
+            tags=tags_list if tags_list else [],
+        )
     except Exception as e:
+        print(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         response_model.status = "error"
         response_model.message = "An error occurred while deleting the photo!"
@@ -210,5 +220,5 @@ async def delete_photo_by_id(
         return response_model
 
     response_model = PhotoResponseSchema()
-    response_model.data = photo
+    response_model.data = photo_data
     return response_model

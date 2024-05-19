@@ -3,7 +3,7 @@ from src.settings import settings
 
 engine = create_async_engine(settings.get_db_uri())
 async_session_factory = async_sessionmaker(
-    autocommit=False, autoflush=False, bind=engine
+    autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
 )
 
 

@@ -1,7 +1,7 @@
 from typing import BinaryIO
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 
 from src.photos.models import Photo
 from src.photos.utils import upload_file, delete_file
@@ -62,7 +62,6 @@ async def update_photo(
     description: str,
     tags: list[str],
     db: AsyncSession,
-    current_user: User
 ) -> Photo | None:
 
     query = select(Photo).where(Photo.id == photo_id)
@@ -71,26 +70,45 @@ async def update_photo(
     if not photo:
         return None
 
+    tags_arr = []
+
+    if tags:
+        for tag in tags:
+            query = select(Tag).where(Tag.name == tag)
+            res = await db.execute(query)
+            tag_obj = res.scalars().one_or_none()
+            if tag_obj:
+                tags_arr.append(tag_obj)
+            else:
+                new_tag = Tag(name=tag)
+                tags_arr.append(new_tag)
+
+        await db.commit()
+        await db.flush()
+
+    photo.tags = tags_arr
+
     asset = await upload_file(file, folder="photos")
     photo.title = title
     photo.description = description
     photo.public_id = asset.get("public_id")
     photo.secure_url = asset.get("secure_url")
     photo.folder = "photos"
-    photo.tags = [Tag(name=tag) for tag in tags]
     await db.commit()
     await db.refresh(photo)
     return photo
 
 
 async def delete_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
-    query = select(Photo).where(Photo.id == photo_id)
+    query = (select(Photo).
+             where(Photo.id == photo_id).
+             options(selectinload(Photo.tags)))
     res = await db.execute(query)
     photo = res.scalars().one_or_none()
     if not photo:
         return None
 
-    deleted = await delete_file(public_id=photo.public_id)
+    deleted = delete_file(public_id=photo.public_id)
     if not deleted:
         return None
 

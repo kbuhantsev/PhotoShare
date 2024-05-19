@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 from src.schemas import ResponseModel
 
@@ -15,6 +17,8 @@ class PhotoResponseSchema(ResponseModel):
     data: PhotoSchema = None
 
 
+class PhotosResponseSchema(ResponseModel):
+    data: List[PhotoSchema] = []
 
 
 

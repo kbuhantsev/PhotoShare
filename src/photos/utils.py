@@ -26,7 +26,7 @@ def upload_file(file: BinaryIO, folder: str):
     return asset
 
 
-def delete_file(public_id: str):
+def delete_file(public_id: str) -> bool:
     r = cloudinary.uploader.destroy(public_id=public_id)
     if r.get("result") == "ok":
         return True
