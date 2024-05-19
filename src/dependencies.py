@@ -1,6 +1,6 @@
 from typing import Annotated
-from fastapi import Depends, Request
 
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db

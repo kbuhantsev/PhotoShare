@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.router import router as auth_router
+from src.comments.router import router as comments_router
+from src.database import get_db
 from src.photos.router import router as photos_router
 from src.tags.router import router as tags_router
 from src.user.router import router as user_router
-from src.comments.router import router as comments_router
-from src.database import get_db
 
 
 @asynccontextmanager

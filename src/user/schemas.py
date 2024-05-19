@@ -1,9 +1,9 @@
-# pydantic models
 from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer
 
-from src.user.models import Role
 from src.schemas import ResponseModel
+from src.user.models import Role
 
 
 class UserSchema(BaseModel):

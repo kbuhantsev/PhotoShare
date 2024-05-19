@@ -1,14 +1,14 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.settings import settings
 from src.database import get_db
+from src.settings import settings
 from src.user import service as users
 
 

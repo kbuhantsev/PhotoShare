@@ -1,11 +1,10 @@
 from typing import BinaryIO
 
 import cloudinary
-import cloudinary.uploader
 import cloudinary.api
+import cloudinary.uploader
 
 from src.settings import settings
-
 
 cloudinary.config(
     cloud_name=settings.cloudinary_name,

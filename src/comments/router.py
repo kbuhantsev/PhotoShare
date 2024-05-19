@@ -1,15 +1,12 @@
 from fastapi import APIRouter, Depends, Response, status
-from src.database import get_db
-from src.comments.schemas import CommentSchema, CommentResponseSchema
-
-from typing import List
-from src.dependencies import get_current_user
-
-from src.user.models import User
-from src.comments.models import Comment
 from sqlalchemy.ext.asyncio import AsyncSession
+
 import src.comments.service as comment_services
-from src.dependencies import allowed_delite_comments
+from src.comments.schemas import CommentResponseSchema, CommentSchema
+from src.database import get_db
+from src.dependencies import allowed_delite_comments, get_current_user
+from src.user.models import User
+
 router = APIRouter(
     prefix="/comments",
     tags=["comments"],
@@ -40,8 +37,6 @@ async def create_comment_handler(
         response_model.message = "An error occurred while posting the comment"
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return response_model
-
-
 
     response = CommentResponseSchema()
     response.data = comment_create
@@ -105,7 +100,6 @@ async def delete_comment_handler(
         current_user: User = Depends(get_current_user),
 
 ):
-
     response_model = CommentResponseSchema()
     try:
         deleted_comment = await comment_services.delete_comment(

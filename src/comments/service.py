@@ -1,20 +1,22 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
+from typing import List
+
 from fastapi import Depends, HTTPException, status
 from sqlalchemy import and_, select
-from src.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.comments.models import Comment
-from datetime import datetime
-from src.comments.schemas import CommentSchema, CommentResponseSchema
-from typing import List
-from src.dependencies import get_current_user
-from src.user.models import User
-from src.user.models import Role
-from src.dependencies import allowed_delite_comments
+from src.comments.schemas import CommentResponseSchema, CommentSchema
+from src.database import get_db
+from src.dependencies import allowed_delite_comments, get_current_user
+from src.user.models import Role, User
+
+
 async def create_comment(
-    photo_id: int,
-    comment: CommentSchema,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+        photo_id: int,
+        comment: CommentSchema,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ) -> Comment | None:
     """
     Create a new comment for a photo.
@@ -41,7 +43,7 @@ async def create_comment(
 
 
 async def get_comments(
-    photo_id: int, db: AsyncSession = Depends(get_db)
+        photo_id: int, db: AsyncSession = Depends(get_db)
 ) -> list[Comment]:
     """
     Retrieve all comments for a specific photo.
@@ -56,11 +58,12 @@ async def get_comments(
     result = await db.execute(select(Comment).filter(Comment.photo_id == photo_id))
     return list(result.scalars().all())
 
+
 async def update_comment(
-    comment_id: int,
-    comment: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+        comment_id: int,
+        comment: str,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
 ) -> Comment | None:
     """
     Update an existing comment.
@@ -94,9 +97,9 @@ async def update_comment(
 
 
 async def delete_comment(
-    comment_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+        comment_id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user=Depends(get_current_user),
 ):
     """
     Delete an existing comment.
