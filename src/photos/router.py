@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException
 from typing import Annotated
 
 from fastapi import File, Form, UploadFile, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dependencies import get_current_user
+from src.photos.dependencies import allowed_delete_photo
 from src.photos.service import (
     create_photo,
     update_photo,
@@ -24,7 +25,7 @@ router = APIRouter(
 
 @router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
-        skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
+    skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
 ):
     response_model = PhotoResponseSchema()
 
@@ -92,13 +93,13 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
     response_model=PhotoResponseSchema,
 )
 async def create_photo_handler(
-        response: Response,
-        title: Annotated[str, Form()],
-        file: Annotated[UploadFile, File()],
-        description: Annotated[str, Form()],
-        tags: Annotated[str, Form()] = None,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    response: Response,
+    title: Annotated[str, Form()],
+    file: Annotated[UploadFile, File()],
+    description: Annotated[str, Form()],
+    tags: Annotated[str, Form()] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
@@ -148,14 +149,14 @@ async def create_photo_handler(
     "/{photo_id}", status_code=status.HTTP_200_OK, response_model=PhotoResponseSchema
 )
 async def update_photo_by_id(
-        response: Response,
-        photo_id: int,
-        title: Annotated[str, Form()] = None,
-        file: Annotated[UploadFile, File()] = None,
-        description: Annotated[str, Form()] = None,
-        tags: Annotated[str, Form()] = None,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    response: Response,
+    photo_id: int,
+    title: Annotated[str, Form()] = None,
+    file: Annotated[UploadFile, File()] = None,
+    description: Annotated[str, Form()] = None,
+    tags: Annotated[str, Form()] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
@@ -205,8 +206,17 @@ async def update_photo_by_id(
     "/{photo_id}", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK
 )
 async def delete_photo_by_id(
-        response: Response, photo_id: int, db: AsyncSession = Depends(get_db)
+    response: Response,
+    photo_id: int,
+    allowed: Annotated[bool, Depends(allowed_delete_photo)],
+    db: AsyncSession = Depends(get_db),
 ):
+
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
+        )
+
     response_model = PhotoResponseSchema()
 
     try:
