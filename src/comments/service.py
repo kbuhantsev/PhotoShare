@@ -1,23 +1,20 @@
-from datetime import datetime
-from typing import List
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 
-from fastapi import Depends, HTTPException, status
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.comments.models import Comment
-from src.comments.schemas import CommentResponseSchema, CommentSchema
-from src.database import get_db
-from src.dependencies import allowed_delite_comments, get_current_user
-from src.user.models import Role, User
+from src.comments.schemas import CommentSchema
+from src.dependencies import get_current_user
+from src.user.models import User
 
 
 async def create_comment(
-        photo_id: int,
         comment: CommentSchema,
         db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user),
-) -> Comment | None:
+) -> CommentSchema | None:
     """
     Create a new comment for a photo.
 
@@ -86,10 +83,7 @@ async def update_comment(
         )
     )
     db_comment = result.scalar_one_or_none()
-    # if not db_comment:
-    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     db_comment.comment = comment
-    db_comment.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(db_comment)
 
@@ -98,9 +92,8 @@ async def update_comment(
 
 async def delete_comment(
         comment_id: int,
-        db: AsyncSession = Depends(get_db),
-        current_user=Depends(get_current_user),
-):
+        db: AsyncSession = Depends(get_db)
+) -> Comment | None:
     """
     Delete an existing comment.
 
@@ -113,16 +106,8 @@ async def delete_comment(
     :return: A CommentModel instance indicating the result of the delete operation.
     :rtype: CommentModel
     """
-    # if current_user.role != Role.ADMIN and current_user.role != Role.MODERATOR:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail="Only administrators and moderators can delete comments",
-    #     )
-
     result = await db.execute(select(Comment).filter(Comment.id == comment_id))
     db_comment = result.scalar_one_or_none()
-    # if not db_comment:
-    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     await db.delete(db_comment)
     await db.commit()

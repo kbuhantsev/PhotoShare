@@ -1,8 +1,6 @@
-from typing import List, Optional
-
 from pydantic import BaseModel
-
 from src.schemas import ResponseModel
+from typing import List, Optional
 
 
 class CommentSchema(BaseModel):
