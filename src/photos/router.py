@@ -34,7 +34,7 @@ router = APIRouter(
 
 @router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
-    skip: int = 0, limit: int = 20, q: str = "", db: AsyncSession = Depends(get_db)
+    skip: int = 0, limit: int = 50, q: str = "", db: AsyncSession = Depends(get_db)
 ):
     response_model = PhotosResponseSchema()
 

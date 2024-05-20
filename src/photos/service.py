@@ -1,6 +1,6 @@
 from typing import BinaryIO
 
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, RowMapping, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -59,7 +59,7 @@ async def update_photo(
     description: str,
     tags: list[str],
     db: AsyncSession,
-) -> Photo | None:
+) -> RowMapping | None:
     query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
     res = await db.execute(query)
     photo = res.scalars().first()
@@ -98,7 +98,7 @@ async def update_photo(
     return photo
 
 
-async def delete_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
+async def delete_photo(*, photo_id: int, db: AsyncSession) -> RowMapping | None:
     query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
     res = await db.execute(query)
     photo = res.scalars().one_or_none()
@@ -120,7 +120,7 @@ async def get_photos(
 ) -> list[Photo]:
 
     if query:
-        statement = get_search_statement(query)
+        statement = get_search_statement(query, skip, limit)
         res = await db.execute(statement)
 
         return list(res.scalars().all())
@@ -143,18 +143,23 @@ async def get_photos_count(query: str, db: AsyncSession) -> int:
     return total
 
 
-async def get_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
-    query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
+async def get_photo(*, photo_id: int, db: AsyncSession) -> RowMapping | None:
+    query = (select(Photo).
+             where(Photo.id == photo_id).
+             options(selectinload(Photo.tags))
+    )
     res = await db.execute(query)
     return res.scalars().one_or_none()
 
 
-def get_search_statement(query: str):
+def get_search_statement(query: str, skip: int = 0, limit: int = 50) -> Select:
     statement = (
         select(Photo)
         .join(PhotoToTag, Photo.id == PhotoToTag.photo_id)
         .join(Tag, Tag.id == PhotoToTag.tag_id)
         .where(or_(Tag.name.ilike(f"%{query}%"), Photo.title.ilike(f"%{query}%")))
+        .offset(skip)
+        .limit(limit)
         .options(selectinload(Photo.tags))
     )
     return statement
