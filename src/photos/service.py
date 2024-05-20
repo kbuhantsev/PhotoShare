@@ -1,10 +1,11 @@
 from typing import BinaryIO
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.photos.models import Photo
-from src.photos.utils import upload_file, delete_file
+from src.photos.utils import delete_file, upload_file
 from src.tags.models import Tag
 from src.user.models import User
 

@@ -1,22 +1,22 @@
-from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.security import (
-    OAuth2PasswordRequestForm,
     HTTPAuthorizationCredentials,
     HTTPBearer,
+    OAuth2PasswordRequestForm,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.auth.schemas import ForgotPasswordTokenSchema, TokenSchema
 from src.database import get_db
 from src.schemas import ResponseModel
-from src.auth.schemas import ForgotPasswordTokenSchema, TokenSchema
+from src.services.authentication import auth_service
+from src.user import service as users
 from src.user.schemas import (
     UserRequestEmailSchema,
     UserRequestPasswordResetSchema,
-    UserSchema,
     UserResponseSchema,
+    UserSchema,
 )
-from src.user import service as users
-from src.services.authentication import auth_service
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 get_refresh_token = HTTPBearer()

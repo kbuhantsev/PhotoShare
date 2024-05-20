@@ -1,20 +1,26 @@
+
 from fastapi import APIRouter, status, Depends, HTTPException
+
+
 from typing import Annotated
 
-from fastapi import File, Form, UploadFile, Response
+from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.database import get_db
 from src.dependencies import get_current_user
+
 from src.photos.dependencies import allowed_delete_photo
+
+from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema
+
 from src.photos.service import (
     create_photo,
-    update_photo,
-    get_photo,
     delete_photo,
+    get_photo,
     get_photos,
+    update_photo,
 )
-from src.database import get_db
-from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema
 from src.user.models import User
 
 router = APIRouter(

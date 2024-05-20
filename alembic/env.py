@@ -6,13 +6,12 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
-from src.settings import settings
+from src.comments.models import Comment
 from src.models import Base, Rating
 from src.photos.models import Photo
+from src.settings import settings
 from src.tags.models import Tag
 from src.user.models import User
-from src.comments.models import Comment
 
 URI = settings.get_db_uri()
 
