@@ -8,6 +8,7 @@ from src.comments.models import Comment
 from src.comments.schemas import CommentSchema
 from src.dependencies import get_current_user
 from src.user.models import User
+from src.database import get_db
 
 
 async def create_comment(
