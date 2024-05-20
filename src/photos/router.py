@@ -1,19 +1,21 @@
-
-from fastapi import APIRouter, status, Depends, HTTPException
-
-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Response,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
 from src.dependencies import get_current_user
-
 from src.photos.dependencies import allowed_delete_photo
-
 from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema
-
 from src.photos.service import (
     create_photo,
     delete_photo,
@@ -162,7 +164,6 @@ async def update_photo_by_id(
     description: Annotated[str, Form()] = None,
     tags: Annotated[str, Form()] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
@@ -214,7 +215,7 @@ async def update_photo_by_id(
 async def delete_photo_by_id(
     response: Response,
     photo_id: int,
-    allowed: Annotated[bool, Depends(allowed_delete_photo)],
+    allowed: bool = Depends(allowed_delete_photo),
     db: AsyncSession = Depends(get_db),
 ):
 

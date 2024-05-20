@@ -11,13 +11,13 @@ from src.user.models import User
 
 
 async def create_photo(
-        *,
-        title: str,
-        file: BinaryIO,
-        description: str,
-        tags: list[str],
-        db: AsyncSession,
-        current_user: User
+    *,
+    title: str,
+    file: BinaryIO,
+    description: str,
+    tags: list[str],
+    db: AsyncSession,
+    current_user: User,
 ) -> Photo | None:
     asset = upload_file(file, folder="photos")
 
@@ -52,18 +52,15 @@ async def create_photo(
 
 
 async def update_photo(
-        *,
-        photo_id: int,
-        title: str,
-        file: BinaryIO,
-        description: str,
-        tags: list[str],
-        db: AsyncSession,
+    *,
+    photo_id: int,
+    title: str,
+    file: BinaryIO,
+    description: str,
+    tags: list[str],
+    db: AsyncSession,
 ) -> Photo | None:
-    query = (select(Photo).
-             where(Photo.id == photo_id).
-             options(selectinload(Photo.tags))
-             )
+    query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
     res = await db.execute(query)
     photo = res.scalars().first()
     if not photo:
@@ -102,9 +99,7 @@ async def update_photo(
 
 
 async def delete_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
-    query = (select(Photo).
-             where(Photo.id == photo_id).
-             options(selectinload(Photo.tags)))
+    query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
     res = await db.execute(query)
     photo = res.scalars().one_or_none()
     if not photo:
@@ -121,19 +116,12 @@ async def delete_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
 
 
 async def get_photos(skip: int, limit: int, db: AsyncSession) -> list[Photo]:
-    query = (
-        select(Photo).
-        offset(skip).
-        limit(limit).
-        options(selectinload(Photo.tags))
-    )
+    query = select(Photo).offset(skip).limit(limit).options(selectinload(Photo.tags))
     res = await db.execute(query)
     return list(res.scalars().all())
 
 
 async def get_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
-    query = (select(Photo).
-             where(Photo.id == photo_id).
-             options(selectinload(Photo.tags)))
+    query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
     res = await db.execute(query)
     return res.scalars().one_or_none()
