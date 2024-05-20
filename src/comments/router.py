@@ -7,7 +7,6 @@ from src.database import get_db
 from src.dependencies import allowed_delite_comments, get_current_user
 from src.user.models import User
 
-
 router = APIRouter(
     prefix="/comments",
     tags=["Comments"],
@@ -15,28 +14,30 @@ router = APIRouter(
 
 
 @router.post(
-    "/", status_code=status.HTTP_201_CREATED, response_model=CommentResponseSchema,
-    description="No more than 15 requests per minute"
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CommentResponseSchema,
+    description="No more than 15 requests per minute",
 )
 async def create_comment_handler(
-        response: Response,
-        comment: CommentSchema,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    response: Response,
+    comment: CommentSchema,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
-       Create a new comment.
+    Create a new comment.
 
-       :param response: The response object.
-       :type response: Response
-       :param comment: The comment to be created.
-       :type comment: CommentSchema
-       :param db: The database session.
-       :type db: AsyncSession
-       :param current_user: The current authenticated user.
-       :type current_user: User
-       :return: The created comment.
-       :rtype: CommentResponseSchema
+    :param response: The response object.
+    :type response: Response
+    :param comment: The comment to be created.
+    :type comment: CommentSchema
+    :param db: The database session.
+    :type db: AsyncSession
+    :param current_user: The current authenticated user.
+    :type current_user: User
+    :return: The created comment.
+    :rtype: CommentResponseSchema
     """
     response_model = CommentResponseSchema()
     try:
@@ -56,19 +57,23 @@ async def create_comment_handler(
     return response
 
 
-@router.get("/{photo_id}", status_code=status.HTTP_200_OK, response_model=CommentResponseSchema)
-async def get_comments_handler(photo_id: int, response: Response, db: AsyncSession = Depends(get_db)):
+@router.get(
+    "/{photo_id}", status_code=status.HTTP_200_OK, response_model=CommentResponseSchema
+)
+async def get_comments_handler(
+    photo_id: int, response: Response, db: AsyncSession = Depends(get_db)
+):
     """
-       Get comments for a photo.
+    Get comments for a photo.
 
-       :param photo_id: The ID of the photo.
-       :type photo_id: int
-       :param response: The response object.
-       :type response: Response
-       :param db: The database session.
-       :type db: AsyncSession
-       :return: The comments for the photo.
-       :rtype: CommentResponseSchema
+    :param photo_id: The ID of the photo.
+    :type photo_id: int
+    :param response: The response object.
+    :type response: Response
+    :param db: The database session.
+    :type db: AsyncSession
+    :return: The comments for the photo.
+    :rtype: CommentResponseSchema
     """
     response_model_instance = CommentResponseSchema()
     try:
@@ -76,7 +81,9 @@ async def get_comments_handler(photo_id: int, response: Response, db: AsyncSessi
     except Exception as e:
         print(e)
         response_model_instance.status = "error"
-        response_model_instance.message = "An error occurred while getting comments from this photo"
+        response_model_instance.message = (
+            "An error occurred while getting comments from this photo"
+        )
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return response_model_instance
 
@@ -85,29 +92,33 @@ async def get_comments_handler(photo_id: int, response: Response, db: AsyncSessi
     return response
 
 
-@router.put("/{comment_id}", response_model=CommentResponseSchema, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{comment_id}",
+    response_model=CommentResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
 async def update_comment_handler(
-        response: Response,
-        comment_id: int,
-        comment: str,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    response: Response,
+    comment_id: int,
+    comment: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
-       Update a comment.
+    Update a comment.
 
-       :param response: The response object.
-       :type response: Response
-       :param comment_id: The ID of the comment to be updated.
-       :type comment_id: int
-       :param comment: The updated comment text.
-       :type comment: str
-       :param db: The database session.
-       :type db: AsyncSession
-       :param current_user: The current authenticated user.
-       :type current_user: User
-       :return: The updated comment.
-       :rtype: CommentResponseSchema
+    :param response: The response object.
+    :type response: Response
+    :param comment_id: The ID of the comment to be updated.
+    :type comment_id: int
+    :param comment: The updated comment text.
+    :type comment: str
+    :param db: The database session.
+    :type db: AsyncSession
+    :param current_user: The current authenticated user.
+    :type current_user: User
+    :return: The updated comment.
+    :rtype: CommentResponseSchema
     """
     response_model = CommentResponseSchema()
     try:
@@ -133,23 +144,25 @@ async def update_comment_handler(
     return response
 
 
-@router.delete("/{comment_id}", response_model=CommentResponseSchema, dependencies=[Depends(allowed_delite_comments)])
+@router.delete(
+    "/{comment_id}",
+    response_model=CommentResponseSchema,
+    dependencies=[Depends(allowed_delite_comments)],
+)
 async def delete_comment_handler(
-        response: Response,
-        comment_id: int,
-        db: AsyncSession = Depends(get_db)
+    response: Response, comment_id: int, db: AsyncSession = Depends(get_db)
 ):
     """
-        Delete a comment.
+    Delete a comment.
 
-        :param response: The response object.
-        :type response: Response
-        :param comment_id: The ID of the comment to be deleted.
-        :type comment_id: int
-        :param db: The database session.
-        :type db: AsyncSession
-        :return: The deleted comment.
-        :rtype: CommentResponseSchema
+    :param response: The response object.
+    :type response: Response
+    :param comment_id: The ID of the comment to be deleted.
+    :type comment_id: int
+    :param db: The database session.
+    :type db: AsyncSession
+    :return: The deleted comment.
+    :rtype: CommentResponseSchema
     """
     response_model = CommentResponseSchema()
     try:
