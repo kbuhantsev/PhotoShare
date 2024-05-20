@@ -9,7 +9,7 @@ from src.user.models import User
 
 router = APIRouter(
     prefix="/comments",
-    tags=["comments"],
+    tags=["Comments"],
 )
 
 
