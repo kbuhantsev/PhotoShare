@@ -26,4 +26,5 @@ class PhotoResponseSchema(ResponseModel):
 
 
 class PhotosResponseSchema(ResponseModel):
-    data: List[PhotoSchema] = []
+    data: Optional[List[PhotoSchema]] = []
+    total: Optional[int] = 0

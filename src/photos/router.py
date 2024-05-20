@@ -22,28 +22,31 @@ from src.photos.service import (
     get_photo,
     get_photos,
     update_photo,
+    get_photos_count,
 )
 from src.user.models import User
 
 router = APIRouter(
     prefix="/photos",
-    tags=["photos"],
+    tags=["Photos"],
 )
 
 
 @router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
-    skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
+    skip: int = 0, limit: int = 20, q: str = "", db: AsyncSession = Depends(get_db)
 ):
-    response_model = PhotoResponseSchema()
+    response_model = PhotosResponseSchema()
 
     try:
-        photos = await get_photos(skip=skip, limit=limit, db=db)
+        total = await get_photos_count(query=q, db=db)
+        photos = await get_photos(skip=skip, limit=limit, query=q, db=db)
         photos_data = []
         for photo in photos:
             tags_list = [tag.name for tag in photo.tags]
             photos_data.append(
                 PhotoSchema(
+                    id=photo.id,
                     title=photo.title,
                     owner_id=photo.owner_id,
                     public_id=photo.public_id,
@@ -52,6 +55,7 @@ async def get_photos_handler(
                     tags=tags_list if tags_list else [],
                 )
             )
+        response_model.total = total
         response_model.data = photos_data
 
     except Exception as e:

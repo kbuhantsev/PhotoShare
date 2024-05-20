@@ -23,6 +23,7 @@ python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 black = "^24.4.2"
 isort = {extras = ["pipfile-deprecated-finder", "requirements-deprecated-finder"], version = "^5.13.2"}
 mypy = "^1.10.0"
+jupyter = "^1.0.0"
 
 
 [tool.poetry.group.test.dependencies]
