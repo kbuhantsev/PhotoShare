@@ -1,7 +1,7 @@
-from fastapi import Request, Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 
-from src.user.models import Role, User
 from src.services.authentication import auth_service
+from src.user.models import Role, User
 
 
 class RolesAccess:

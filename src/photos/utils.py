@@ -1,11 +1,10 @@
 from typing import BinaryIO
 
 import cloudinary
-import cloudinary.uploader
 import cloudinary.api
+import cloudinary.uploader
 
 from src.settings import settings
-
 
 cloudinary.config(
     cloud_name=settings.cloudinary_name,
@@ -26,7 +25,7 @@ def upload_file(file: BinaryIO, folder: str):
     return asset
 
 
-def delete_file(public_id: str):
+def delete_file(public_id: str) -> bool:
     r = cloudinary.uploader.destroy(public_id=public_id)
     if r.get("result") == "ok":
         return True

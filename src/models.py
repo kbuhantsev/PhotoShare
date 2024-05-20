@@ -1,14 +1,13 @@
 from sqlalchemy import (
-    Integer,
-    func,
-    DateTime,
-    MetaData,
-    ForeignKey,
-    SmallInteger,
     CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    MetaData,
+    SmallInteger,
+    func,
 )
-
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 base_metadata = MetaData()
 

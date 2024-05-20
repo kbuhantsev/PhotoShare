@@ -1,18 +1,16 @@
 from fastapi import APIRouter, Depends, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import src.comments.service as comment_services
+from src.comments.schemas import CommentResponseSchema, CommentSchema
 from src.database import get_db
-from src.comments.schemas import CommentSchema, CommentResponseSchema
-
-from src.dependencies import get_current_user
-
+from src.dependencies import allowed_delite_comments, get_current_user
 from src.user.models import User
 
-from sqlalchemy.ext.asyncio import AsyncSession
-import src.comments.service as comment_services
-from src.dependencies import allowed_delite_comments
 
 router = APIRouter(
     prefix="/comments",
-    tags=["comments"],
+    tags=["Comments"],
 )
 
 
