@@ -13,7 +13,7 @@ cloudinary.config(
 )
 
 
-def upload_file(file: BinaryIO, folder: str):
+def upload_file(file: BinaryIO | str, folder: str):
     asset = cloudinary.uploader.upload(
         file,
         folder=folder,

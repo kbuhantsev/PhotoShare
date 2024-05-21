@@ -2,7 +2,7 @@ from fastapi import Depends, Request
 
 from src.database import get_db
 from src.dependencies import get_current_user
-from src.photos.service import get_photo
+from src.photos.services.photo_service import get_photo
 from src.user.models import Role, User
 
 from sqlalchemy.ext.asyncio import AsyncSession

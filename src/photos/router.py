@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Union
 
 from fastapi import (
     APIRouter,
@@ -9,14 +9,16 @@ from fastapi import (
     Response,
     UploadFile,
     status,
+    Body
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
 from src.dependencies import get_current_user
 from src.photos.dependencies import allowed_delete_photo
-from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema
-from src.photos.service import (
+from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema, TransformationSchema, \
+    TransformationResponseSchema
+from src.photos.services.photo_service import (
     create_photo,
     delete_photo,
     get_photo,
@@ -24,6 +26,7 @@ from src.photos.service import (
     update_photo,
     get_photos_count,
 )
+from src.photos.services.transformation_service import transform
 from src.user.models import User
 
 router = APIRouter(
@@ -257,3 +260,47 @@ async def delete_photo_by_id(
         return response_model
 
     return response_model
+
+
+#  ---------------------------------------------------------
+#  Transformations
+
+@router.post("/trans/{photo_id}", response_model=TransformationResponseSchema, status_code=status.HTTP_200_OK)
+async def create_transformation(
+     response: Response,
+     photo_id: int,
+     transformations: Annotated[dict[str, Union[str | int | float | None]], Body(embed=True)],
+     db: AsyncSession = Depends(get_db),
+):
+
+    response_model = TransformationResponseSchema()
+
+    try:
+        result = await transform(
+            photo_id=photo_id,
+            transformations=transformations,
+            db=db
+        )
+
+        if not result:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            response_model.status = "error"
+            response_model.message = "An error occurred while creating the transformation!"
+            return response_model
+
+        transformation_data = TransformationSchema(
+            photo_id=photo_id,
+            title=result.get("title"),
+            public_id=result.get("public_id"),
+            secure_url=result.get("secure_url"),
+            folder="transformations",
+        )
+        response_model.data = transformation_data
+    except Exception as e:
+        print(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while creating the transformation!"
+        return response_model
+
+    return result
