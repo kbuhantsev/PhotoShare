@@ -19,4 +19,10 @@ async def get_current_user(
 async def allowed_delete_comments(
     request: Request, user: User = Depends(get_current_user)
 ):
+    return await RolesAccess(allowed_roles=[Role.ADMIN, Role.MODERATOR])(
+        request, user=user
+    )
+
+
+async def allowed_all(request: Request, user: User = Depends(get_current_user)):
     return await RolesAccess(allowed_roles=[Role.ADMIN])(request, user=user)
