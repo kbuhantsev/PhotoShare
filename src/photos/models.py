@@ -14,11 +14,46 @@ class Photo(Base):
     public_id: Mapped[str] = mapped_column(String(255))
     secure_url: Mapped[str] = mapped_column(String(255))
     folder: Mapped[str] = mapped_column(String(255))
+    # Alchemy
     tags: Mapped[list["Tag"]] = relationship(
         "Tag",
         secondary="photos_to_tags",
         back_populates="photos",
     )
+    transformations: Mapped[list["Transformation"]] = relationship(back_populates="photo")
 
     def __repr__(self):
         return f"Photo(title={self.title})"
+
+
+class Transformation(Base):
+    __tablename__ = "transformations"
+    photo_id: Mapped[int] = mapped_column(
+        ForeignKey("photos.id", ondelete="CASCADE", onupdate="CASCADE")
+    )
+    title: Mapped[str] = mapped_column(String(255))
+    public_id: Mapped[str] = mapped_column(String(255))
+    secure_url: Mapped[str] = mapped_column(String(255))
+    folder: Mapped[str] = mapped_column(String(255))
+    # Alchemy
+    qr_code: Mapped["QrCode"] = relationship(back_populates="transformation", single_parent=True)
+    photo: Mapped["Photo"] = relationship(back_populates="transformations")
+
+    def __repr__(self):
+        return f"Transformation(name={self.title})"
+
+
+class QrCode(Base):
+    __tablename__ = "qr_codes"
+    transformation_id: Mapped[int] = mapped_column(
+        ForeignKey("transformations.id", ondelete="CASCADE", onupdate="CASCADE")
+    )
+    title: Mapped[str] = mapped_column(String(255))
+    public_id: Mapped[str] = mapped_column(String(255))
+    secure_url: Mapped[str] = mapped_column(String(255))
+    folder: Mapped[str] = mapped_column(String(255))
+    # Alchemy
+    transformation: Mapped["Transformation"] = relationship(back_populates="qr_code", single_parent=True)
+
+    def __repr__(self):
+        return f"QrCode(name={self.title})"

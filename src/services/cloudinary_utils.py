@@ -1,4 +1,5 @@
 from typing import BinaryIO
+import re
 
 import cloudinary
 import cloudinary.api
@@ -13,7 +14,7 @@ cloudinary.config(
 )
 
 
-def upload_file(file: BinaryIO, folder: str):
+def upload_file(file: BinaryIO | str, folder: str):
     asset = cloudinary.uploader.upload(
         file,
         folder=folder,
@@ -36,6 +37,13 @@ def transform_file(public_id:str, transformations: dict):
 
     result = cloudinary.CloudinaryImage(public_id=public_id) \
         .image(**transformations)
+    if not result:
+        return None
 
-    return result
+    img_url_pattern = re.compile(r'<img\s+[^>]*src="([^"]+)"')
 
+    match = img_url_pattern.search(result)
+    if match:
+        return match.group(1)
+    else:
+        return None

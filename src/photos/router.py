@@ -1,39 +1,60 @@
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Response,
+    UploadFile,
+    status,
+    Body,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
 from src.dependencies import get_current_user
-from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema
-from src.photos.service import (
+from src.photos.dependencies import allowed_delete_photo
+from src.photos.schemas import (
+    PhotoResponseSchema,
+    PhotoSchema,
+    PhotosResponseSchema,
+    TransformationSchema,
+    TransformationResponseSchema, TransformationsURLResponseSchema, TransformationsURLSchema,
+)
+from src.photos.services.photo_service import (
     create_photo,
     delete_photo,
     get_photo,
     get_photos,
     update_photo,
+    get_photos_count,
 )
+from src.photos.services.transformation_service import transform, save_transform
 from src.user.models import User
 
 router = APIRouter(
     prefix="/photos",
-    tags=["photos"],
+    tags=["Photos"],
 )
 
 
 @router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
-        skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)
+    skip: int = 0, limit: int = 50, q: str = "", db: AsyncSession = Depends(get_db)
 ):
-    response_model = PhotoResponseSchema()
+    response_model = PhotosResponseSchema()
 
     try:
-        photos = await get_photos(skip=skip, limit=limit, db=db)
+        total = await get_photos_count(query=q, db=db)
+        photos = await get_photos(skip=skip, limit=limit, query=q, db=db)
         photos_data = []
         for photo in photos:
             tags_list = [tag.name for tag in photo.tags]
             photos_data.append(
                 PhotoSchema(
+                    id=photo.id,
                     title=photo.title,
                     owner_id=photo.owner_id,
                     public_id=photo.public_id,
@@ -42,6 +63,7 @@ async def get_photos_handler(
                     tags=tags_list if tags_list else [],
                 )
             )
+        response_model.total = total
         response_model.data = photos_data
 
     except Exception as e:
@@ -91,13 +113,13 @@ async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
     response_model=PhotoResponseSchema,
 )
 async def create_photo_handler(
-        response: Response,
-        title: Annotated[str, Form()],
-        file: Annotated[UploadFile, File()],
-        description: Annotated[str, Form()],
-        tags: Annotated[str, Form()] = None,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    response: Response,
+    title: Annotated[str, Form()],
+    file: Annotated[UploadFile, File()],
+    description: Annotated[str, Form()],
+    tags: Annotated[str, Form()] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
@@ -147,14 +169,13 @@ async def create_photo_handler(
     "/{photo_id}", status_code=status.HTTP_200_OK, response_model=PhotoResponseSchema
 )
 async def update_photo_by_id(
-        response: Response,
-        photo_id: int,
-        title: Annotated[str, Form()] = None,
-        file: Annotated[UploadFile, File()] = None,
-        description: Annotated[str, Form()] = None,
-        tags: Annotated[str, Form()] = None,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    response: Response,
+    photo_id: int,
+    title: Annotated[str, Form()] = None,
+    file: Annotated[UploadFile, File()] = None,
+    description: Annotated[str, Form()] = None,
+    tags: Annotated[str, Form()] = None,
+    db: AsyncSession = Depends(get_db),
 ):
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
@@ -204,8 +225,17 @@ async def update_photo_by_id(
     "/{photo_id}", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK
 )
 async def delete_photo_by_id(
-        response: Response, photo_id: int, db: AsyncSession = Depends(get_db)
+    response: Response,
+    photo_id: int,
+    allowed: bool = Depends(allowed_delete_photo),
+    db: AsyncSession = Depends(get_db),
 ):
+
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
+        )
+
     response_model = PhotoResponseSchema()
 
     try:
@@ -232,6 +262,83 @@ async def delete_photo_by_id(
         response.status_code = status.HTTP_403_FORBIDDEN
         response_model.status = "error"
         response_model.message = "An error occurred while deleting the photo!"
+        return response_model
+
+    return response_model
+
+
+#  ---------------------------------------------------------
+#  Transformations
+
+
+@router.post(
+    "/trans/{photo_id}", response_model=TransformationsURLResponseSchema, status_code=status.HTTP_200_OK
+)
+async def create_transformation(
+    photo_id: int,
+    transformations: Annotated[dict[str, Any], Body(embed=True)],
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+
+    response_model = TransformationsURLResponseSchema()
+
+    try:
+        result = await transform(
+            photo_id=photo_id, transformations=transformations, db=db
+        )
+
+        if not result:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            response_model.status = "error"
+            response_model.message = (
+                "An error occurred while creating the transformation!"
+            )
+            return response_model
+
+        response_model.data = result
+    except Exception as e:
+        print(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while creating the transformation!"
+        return response_model
+
+    return response_model
+
+
+@router.post(
+    "/trans/save/{photo_id}", response_model=TransformationResponseSchema, status_code=status.HTTP_200_OK
+)
+async def save_transformation(
+        photo_id: int,
+        body: TransformationsURLSchema,
+        response: Response,
+        db: AsyncSession = Depends(get_db),
+):
+    response_model = TransformationResponseSchema()
+
+    try:
+
+        transformation = await save_transform(
+            photo_id=photo_id, url=body.url, db=db
+        )
+
+        if not transformation:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            response_model.status = "error"
+            response_model.message = (
+                "An error occurred while saving the transformation!"
+            )
+            return response_model
+
+        response_model.data = transformation
+
+    except Exception as e:
+        print(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while saving the transformation!"
         return response_model
 
     return response_model

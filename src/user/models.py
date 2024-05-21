@@ -20,6 +20,7 @@ class User(Base):
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     refresh_token: Mapped[str] = mapped_column(String, nullable=True)
     avatar: Mapped[str] = mapped_column(String(255), nullable=True)
+    blocked: Mapped[bool] = mapped_column(default=False)
 
     def __repr__(self):
         return f"User(name={self.username}, role={self.role})"
