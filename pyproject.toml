@@ -17,6 +17,7 @@ python-multipart = "^0.0.9"
 cloudinary = "^1.40.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+qrcode = {extras = ["pil"], version = "^7.4.2"}
 
 
 [tool.poetry.group.dev.dependencies]
