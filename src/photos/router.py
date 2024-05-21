@@ -1,4 +1,4 @@
-from typing import Annotated, Union
+from typing import Annotated, Any
 
 from fastapi import (
     APIRouter,
@@ -9,15 +9,20 @@ from fastapi import (
     Response,
     UploadFile,
     status,
-    Body
+    Body,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
 from src.dependencies import get_current_user
 from src.photos.dependencies import allowed_delete_photo
-from src.photos.schemas import PhotoResponseSchema, PhotoSchema, PhotosResponseSchema, TransformationSchema, \
-    TransformationResponseSchema
+from src.photos.schemas import (
+    PhotoResponseSchema,
+    PhotoSchema,
+    PhotosResponseSchema,
+    TransformationSchema,
+    TransformationResponseSchema, TransformationsURLResponseSchema,
+)
 from src.photos.services.photo_service import (
     create_photo,
     delete_photo,
@@ -265,37 +270,33 @@ async def delete_photo_by_id(
 #  ---------------------------------------------------------
 #  Transformations
 
-@router.post("/trans/{photo_id}", response_model=TransformationResponseSchema, status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/trans/{photo_id}", response_model=TransformationsURLResponseSchema, status_code=status.HTTP_200_OK
+)
 async def create_transformation(
-     response: Response,
-     photo_id: int,
-     transformations: Annotated[dict[str, Union[str | int | float | None]], Body(embed=True)],
-     db: AsyncSession = Depends(get_db),
+    photo_id: int,
+    transformations: Annotated[dict[str, Any], Body(embed=True)],
+    response: Response,
+    db: AsyncSession = Depends(get_db),
 ):
 
-    response_model = TransformationResponseSchema()
+    response_model = TransformationsURLResponseSchema()
 
     try:
         result = await transform(
-            photo_id=photo_id,
-            transformations=transformations,
-            db=db
+            photo_id=photo_id, transformations=transformations, db=db
         )
 
         if not result:
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             response_model.status = "error"
-            response_model.message = "An error occurred while creating the transformation!"
+            response_model.message = (
+                "An error occurred while creating the transformation!"
+            )
             return response_model
 
-        transformation_data = TransformationSchema(
-            photo_id=photo_id,
-            title=result.get("title"),
-            public_id=result.get("public_id"),
-            secure_url=result.get("secure_url"),
-            folder="transformations",
-        )
-        response_model.data = transformation_data
+        response_model.data = result
     except Exception as e:
         print(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -303,4 +304,4 @@ async def create_transformation(
         response_model.message = "An error occurred while creating the transformation!"
         return response_model
 
-    return result
+    return response_model

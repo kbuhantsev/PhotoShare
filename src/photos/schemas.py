@@ -51,3 +51,7 @@ class TransformationResponseSchema(ResponseModel):
 
 class TransformationsResponseSchema(ResponseModel):
     data: Optional[List[TransformationSchema]] = []
+
+
+class TransformationsURLResponseSchema(ResponseModel):
+    data: Optional[str] = None
