@@ -23,3 +23,6 @@ class User(Base):
 
     def __repr__(self):
         return f"User(name={self.username}, role={self.role})"
+    
+    def to_dict(self):
+        return {field.name:getattr(self, field.name) for field in self.__table__.c}
