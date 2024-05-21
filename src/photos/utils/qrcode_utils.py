@@ -1,6 +1,6 @@
 import qrcode
 from src.services.cloudinary_utils import upload_file
-from qrcode.image.base import BaseImage
+from qrcode.image.pure import PyPNGImage
 
 
 def create_qr_code(url: str) -> dict | None:
@@ -14,7 +14,7 @@ def create_qr_code(url: str) -> dict | None:
 
     qr.add_data(url)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white", image_factory=BaseImage)
+    img = qr.make_image(fill_color="black", back_color="white", image_factory=PyPNGImage)
 
     asset = upload_file(file=img, folder="qrcodes")
 
