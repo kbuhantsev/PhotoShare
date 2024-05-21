@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer
@@ -12,12 +13,17 @@ class UserSchema(BaseModel):
     password: str = Field(min_length=8, max_length=12)
 
 
-class UserBaseResponseSchema(UserSchema, ResponseModel):
-    pass
+class UserBaseResponseSchema(ResponseModel):
+
+    data: UserSchema = None
 
 
 class UserResponseSchema(UserBaseResponseSchema):
-    password: str = Field(exclude=True)
+
+    class Data(UserSchema):
+        password: str = Field(exclude=True)
+
+    data: Data = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -25,14 +31,35 @@ class UserResponseSchema(UserBaseResponseSchema):
 
 
 class UserCurrentResponseSchema(UserBaseResponseSchema):
-    password: str = Field(exclude=True)
-    role: Role
-    avatar: Optional[str]
-    confirmed: bool
 
-    @field_serializer("role")
-    def serialize_role(self, role: Role) -> str:
-        return role.name
+    class Data(UserSchema):
+        password: str = Field(exclude=True)
+        role: Role
+        avatar: Optional[str]
+
+        @field_serializer("role")
+        def serialize_role(self, role: Role) -> str:
+            if role is None:
+                return None
+            return role.name
+
+    data: Data = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        unsettabl=True,
+    )
+
+
+class UserProfileResponseSchema(UserCurrentResponseSchema):
+
+    class Data(UserCurrentResponseSchema.Data):
+        created_at: datetime.datetime = None
+        updated_at: datetime.datetime = None
+        count_photos: int = 0
+        count_comments: int = 0
+
+    data: Data = None
 
     model_config = ConfigDict(
         from_attributes=True,

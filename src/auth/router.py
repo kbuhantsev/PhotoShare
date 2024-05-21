@@ -45,7 +45,7 @@ async def signup(body: UserSchema, db: AsyncSession = Depends(get_db)):
     body.password = auth_service.get_password_hash(body.password)
     new_user = await users.create_user(body, db)
 
-    return new_user
+    return {"data": new_user}
 
 
 @router.post("/login", response_model=TokenSchema)
