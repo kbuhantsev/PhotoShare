@@ -65,6 +65,14 @@ class UserProfileResponseSchema(UserCurrentResponseSchema):
         from_attributes=True,
     )
 
+class UsersProfileResponseSchema(UserProfileResponseSchema):
+    data : list[UserProfileResponseSchema.Data] = []
+    total: int = 0
+
+    model_config = ConfigDict( 
+        from_attributes=True
+    )
+
 
 class UserRequestEmailSchema(BaseModel):
     email: EmailStr

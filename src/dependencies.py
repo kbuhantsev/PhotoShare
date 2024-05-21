@@ -16,7 +16,7 @@ async def get_current_user(
     return await auth_service.get_current_user(token=token, db=db)
 
 
-async def allowed_delite_comments(
+async def allowed_delete_comments(
     request: Request, user: User = Depends(get_current_user)
 ):
     return await RolesAccess(allowed_roles=[Role.ADMIN])(request, user=user)

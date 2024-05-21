@@ -8,7 +8,7 @@ from src.dependencies import get_current_user
 
 from src.database import get_db
 from src.user.models import User
-from src.user.schemas import UserCurrentResponseSchema, UserProfileResponseSchema
+from src.user.schemas import UserCurrentResponseSchema, UserProfileResponseSchema, UsersProfileResponseSchema
 from src.user import service as users
 from src.services.cloudinary_utils import upload_file
 
@@ -92,16 +92,16 @@ async def get_profile(username: str, db: AsyncSession = Depends(get_db)):
 
 @router.get(
     "/",
-    # response_model=List[UserProfileResponseSchema],
+    response_model=UsersProfileResponseSchema,
     # dependencies=[Depends(allow_read_all_users)],
 )
 async def get_all_users(db: AsyncSession = Depends(get_db)):
     """
     """
 
-    users_data = await users.get_all_users(db)
-    res = []
-    for user_data in users_data:
-        res.append(UserProfileResponseSchema.model_validate(user_data))
+    try:
+        users_data = await users.get_all_users(db)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
-    return {"data": res}
+    return {"data": users_data, "total": len(users_data)}
