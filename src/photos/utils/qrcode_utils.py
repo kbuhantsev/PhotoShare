@@ -1,6 +1,7 @@
 import qrcode
 from src.services.cloudinary_utils import upload_file
-from qrcode.image.pure import PyPNGImage
+from qrcode.image.svg import SvgPathImage
+import io
 
 
 def create_qr_code(url: str) -> dict | None:
@@ -14,9 +15,13 @@ def create_qr_code(url: str) -> dict | None:
 
     qr.add_data(url)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white", image_factory=PyPNGImage)
+    img: SvgPathImage = qr.make_image(fill_color="black", back_color="white", image_factory=SvgPathImage)
 
-    asset = upload_file(file=img, folder="qrcodes")
+    img_io = io.BytesIO()
+    img.save(img_io)
+    img_io.seek(0)
+
+    asset = upload_file(file=img_io, folder="qrcodes")
 
     if asset:
         return asset

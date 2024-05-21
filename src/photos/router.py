@@ -31,7 +31,7 @@ from src.photos.services.photo_service import (
     update_photo,
     get_photos_count,
 )
-from src.photos.services.transformation_service import transform, save_transform
+from src.photos.services.transformation_service import transform, save_transform, get_qr_code
 from src.user.models import User
 
 router = APIRouter(
@@ -284,11 +284,11 @@ async def create_transformation(
     response_model = TransformationsURLResponseSchema()
 
     try:
-        result = await transform(
+        url = await transform(
             photo_id=photo_id, transformations=transformations, db=db
         )
 
-        if not result:
+        if not url:
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             response_model.status = "error"
             response_model.message = (
@@ -296,7 +296,7 @@ async def create_transformation(
             )
             return response_model
 
-        response_model.data = result
+        response_model.data = url
     except Exception as e:
         print(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -332,6 +332,18 @@ async def save_transformation(
             )
             return response_model
 
+        qr_code = await get_qr_code(
+            transformation_id=transformation.id, url=transformation.secure_url, db=db
+        )
+
+        if not qr_code:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            response_model.status = "error"
+            response_model.message = (
+                "An error occurred while saving the qr code!"
+            )
+            return response_model
+
         transformation_data = TransformationSchema(
             id=transformation.id,
             photo_id=transformation.photo_id,
@@ -339,7 +351,7 @@ async def save_transformation(
             public_id=transformation.public_id,
             secure_url=transformation.secure_url,
             folder=transformation.folder,
-            qr_code=transformation.qr_code
+            qr_code=qr_code.secure_url
         )
 
         response_model.data = transformation_data

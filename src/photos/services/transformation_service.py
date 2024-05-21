@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.photos.models import Photo, Transformation, QrCode
@@ -37,12 +37,18 @@ async def save_transform(
 
     db.add(transformation)
     await db.commit()
+    await db.flush()
     await db.refresh(transformation)
 
-    qr_asset = create_qr_code(url=transformation.secure_url)
+    return transformation
+
+
+async def get_qr_code(transformation_id: int, url: str, db: AsyncSession) -> QrCode | None:
+
+    qr_asset = create_qr_code(url=url)
     if qr_asset:
         qr = QrCode(
-            transformation_id=transformation.id,
+            transformation_id=transformation_id,
             title=qr_asset.get("original_filename"),
             public_id=qr_asset.get("public_id"),
             secure_url=qr_asset.get("secure_url"),
@@ -53,6 +59,6 @@ async def save_transform(
         await db.commit()
         await db.refresh(qr)
 
-        transformation.qr_code = qr_asset.get("secure_url")
+        return qr
 
-    return transformation
+    return None
