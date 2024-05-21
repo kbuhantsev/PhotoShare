@@ -45,6 +45,7 @@ class TransformationSchema(BaseModel):
     public_id: str
     secure_url: str
     folder: str = "transformations"
+    qr_code: Optional[str] = None
 
 
 class TransformationResponseSchema(ResponseModel):

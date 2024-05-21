@@ -1,7 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.photos.models import Photo, Transformation
+from src.photos.models import Photo, Transformation, QrCode
+from src.photos.utils.qrcode_utils import create_qr_code
 from src.services.cloudinary_utils import transform_file, upload_file
 
 
@@ -37,4 +38,21 @@ async def save_transform(
     db.add(transformation)
     await db.commit()
     await db.refresh(transformation)
+
+    qr_asset = create_qr_code(url=transformation.secure_url)
+    if qr_asset:
+        qr = QrCode(
+            transformation_id=transformation.id,
+            title=qr_asset.get("original_filename"),
+            public_id=qr_asset.get("public_id"),
+            secure_url=qr_asset.get("secure_url"),
+            folder=qr_asset.get("folder"),
+        )
+
+        db.add(qr)
+        await db.commit()
+        await db.refresh(qr)
+
+        transformation.qr_code = qr_asset.get("secure_url")
+
     return transformation

@@ -332,7 +332,17 @@ async def save_transformation(
             )
             return response_model
 
-        response_model.data = transformation
+        transformation_data = TransformationSchema(
+            id=transformation.id,
+            photo_id=transformation.photo_id,
+            title=transformation.title,
+            public_id=transformation.public_id,
+            secure_url=transformation.secure_url,
+            folder=transformation.folder,
+            qr_code=transformation.qr_code
+        )
+
+        response_model.data = transformation_data
 
     except Exception as e:
         print(e)
