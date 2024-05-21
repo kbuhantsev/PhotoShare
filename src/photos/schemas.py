@@ -8,6 +8,7 @@ from src.schemas import ResponseModel
 #  ---------------------------------------------------------
 #  Photos
 
+
 class PhotoSchema(BaseModel):
     id: Optional[int] = None
     title: str
@@ -36,6 +37,7 @@ class PhotosResponseSchema(ResponseModel):
 #  ---------------------------------------------------------
 #  Transformations
 
+
 class TransformationSchema(BaseModel):
     id: Optional[int] = None
     photo_id: int
@@ -51,6 +53,10 @@ class TransformationResponseSchema(ResponseModel):
 
 class TransformationsResponseSchema(ResponseModel):
     data: Optional[List[TransformationSchema]] = []
+
+
+class TransformationsURLSchema(BaseModel):
+    url: str
 
 
 class TransformationsURLResponseSchema(ResponseModel):

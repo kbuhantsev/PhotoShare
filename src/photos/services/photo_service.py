@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.photos.models import Photo
-from src.photos.utils.cloudinary_utils import delete_file, upload_file
+from src.services.cloudinary_utils import delete_file, upload_file
 from src.tags.models import Tag, PhotoToTag
 from src.user.models import User
 

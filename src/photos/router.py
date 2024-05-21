@@ -21,7 +21,7 @@ from src.photos.schemas import (
     PhotoSchema,
     PhotosResponseSchema,
     TransformationSchema,
-    TransformationResponseSchema, TransformationsURLResponseSchema,
+    TransformationResponseSchema, TransformationsURLResponseSchema, TransformationsURLSchema,
 )
 from src.photos.services.photo_service import (
     create_photo,
@@ -31,7 +31,7 @@ from src.photos.services.photo_service import (
     update_photo,
     get_photos_count,
 )
-from src.photos.services.transformation_service import transform
+from src.photos.services.transformation_service import transform, save_transform
 from src.user.models import User
 
 router = APIRouter(
@@ -302,6 +302,43 @@ async def create_transformation(
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         response_model.status = "error"
         response_model.message = "An error occurred while creating the transformation!"
+        return response_model
+
+    return response_model
+
+
+@router.post(
+    "/trans/save/{photo_id}", response_model=TransformationResponseSchema, status_code=status.HTTP_200_OK
+)
+async def save_transformation(
+        photo_id: int,
+        body: TransformationsURLSchema,
+        response: Response,
+        db: AsyncSession = Depends(get_db),
+):
+    response_model = TransformationResponseSchema()
+
+    try:
+
+        transformation = await save_transform(
+            photo_id=photo_id, url=body.url, db=db
+        )
+
+        if not transformation:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            response_model.status = "error"
+            response_model.message = (
+                "An error occurred while saving the transformation!"
+            )
+            return response_model
+
+        response_model.data = transformation
+
+    except Exception as e:
+        print(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        response_model.status = "error"
+        response_model.message = "An error occurred while saving the transformation!"
         return response_model
 
     return response_model
