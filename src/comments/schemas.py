@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.schemas import ResponseModel
 
@@ -8,12 +8,14 @@ from datetime import datetime
 
 
 class CommentSchema(BaseModel):
-    id: Optional[int] = None
+    id: int | None = None
     user_id: int
     photo_id: int
     comment: str
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CommentResponseSchema(ResponseModel):

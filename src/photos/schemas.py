@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.comments.schemas import CommentSchema
 from src.schemas import ResponseModel
@@ -14,6 +14,8 @@ class QrCodeSchema(BaseModel):
     public_id: str
     secure_url: str
     folder: str = "qrcodes"
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 #  ---------------------------------------------------------
@@ -29,6 +31,8 @@ class TransformationSchema(BaseModel):
     folder: str = "transformations"
     qr_code: Optional[QrCodeSchema] = None
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class TransformationResponseSchema(ResponseModel):
     data: Optional[TransformationSchema] = None
@@ -43,7 +47,7 @@ class TransformationsURLSchema(BaseModel):
 
 
 class TransformationsURLResponseSchema(ResponseModel):
-    data: Optional[str] = None
+    data: str | None = None
 
 
 #  ---------------------------------------------------------
@@ -51,21 +55,23 @@ class TransformationsURLResponseSchema(ResponseModel):
 
 
 class PhotoSchema(BaseModel):
-    id: Optional[int] = None
+    id: int | None = None
     title: str
     owner_id: int
     public_id: str
     secure_url: str
     folder: str = "photos"
-    tags: Optional[list[TagSchema]] = None
-    transformations: Optional[list[TransformationSchema]] = None
-    comments: Optional[list[CommentSchema]] = None
+    tags: list[TagSchema] | None = []
+    transformations: list[TransformationSchema] | None = []
+    comments: list[CommentSchema] | None = []
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UpdatePhotoSchema(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    tags: Optional[list[TagSchema]] = None
+    title: str | None = None
+    description: str | None = None
+    tags: list[TagSchema] | None = None
 
 
 class PhotoResponseSchema(ResponseModel):
@@ -73,5 +79,5 @@ class PhotoResponseSchema(ResponseModel):
 
 
 class PhotosResponseSchema(ResponseModel):
-    data: Optional[List[PhotoSchema]] = []
-    total: Optional[int] = 0
+    data: List[PhotoSchema] | None = []
+    total: int | None = 0
