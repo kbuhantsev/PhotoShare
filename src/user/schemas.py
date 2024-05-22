@@ -1,10 +1,15 @@
 import datetime
-from typing import Optional
+from typing import List, Literal, Optional
 
+from fastapi import Query
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer
 
 from src.schemas import ResponseModel
 from src.user.models import Role
+
+
+class UsersRolesResponseShema(ResponseModel):
+    data: List = []
 
 
 class UserSchema(BaseModel):
@@ -48,7 +53,6 @@ class UserCurrentResponseSchema(UserBaseResponseSchema):
 
     model_config = ConfigDict(
         from_attributes=True,
-        unsettabl=True,
     )
 
 
@@ -66,12 +70,13 @@ class UserProfileResponseSchema(UserCurrentResponseSchema):
         from_attributes=True,
     )
 
+
 class UsersProfileResponseSchema(UserProfileResponseSchema):
-    data : list[UserProfileResponseSchema.Data] = []
+    data: list[UserProfileResponseSchema.Data] = []
     total: int = 0
 
-    model_config = ConfigDict( 
-        from_attributes=True
+    model_config = ConfigDict(
+        from_attributes=True,
     )
 
 
