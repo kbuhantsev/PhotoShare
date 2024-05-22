@@ -1,12 +1,12 @@
 from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.user.models import Role, User
 from src.user.schemas import UserSchema
 from src.photos.models import Photo
 from src.comments.models import Comment
-
 
 async def get_count_users(db: AsyncSession):
     """
@@ -123,7 +123,7 @@ async def update_password(email: User, password: str, db: AsyncSession):
     return user
 
 
-async def update_role(user: User, role: Role, db: AsyncSession):
+async def update_role(email: str, role: Role, db: AsyncSession):
     """
     Update user role.
 
@@ -137,6 +137,11 @@ async def update_role(user: User, role: Role, db: AsyncSession):
     :return: updated user
     :rtype: User
     """
+    user = await get_user_by_email(email, db)
+
+    if user.role == role:
+        return user
+
     user.role = role
     await db.commit()
     await db.refresh(user)
@@ -195,7 +200,8 @@ async def get_all_users(db: AsyncSession):
     :return: all users
     :rtype: List[User]
     """
-    stmt = (select(
+    stmt = (
+        select(
             User,
             func.count(Photo.id).label("count_photos"),
             func.count(Comment.id).label("count_comments"),
@@ -203,13 +209,14 @@ async def get_all_users(db: AsyncSession):
         .select_from(User)
         .join(Photo, isouter=True)
         .join(Comment, User.id == Comment.user_id, isouter=True)
-        .group_by(User.id))
-    
+        .group_by(User.id)
+    )
+
     result = await db.execute(stmt)
 
     if not result:
         return None
-    
+
     users_data = result.mappings().all()
 
     users_profiles = []
@@ -223,3 +230,74 @@ async def get_all_users(db: AsyncSession):
         users_profiles.append(profile)
 
     return users_profiles
+
+
+async def get_users_photos(skip: int, limit: int, user: User, db: AsyncSession):
+    """
+    Get users photos.
+
+    :param skip: skip
+    :type skip: int
+    :param limit: limit
+    :type limit: int
+    :param db: database connection
+    :type db: AsyncSession
+
+    :return: users photos
+    :rtype: List[Photo]
+    """
+
+    # TODO: change to use src.photos
+    stmt = (
+        select(Photo)
+        .filter_by(owner_id=user.id)
+        .offset(skip)
+        .limit(limit)
+        .options(selectinload(Photo.tags))
+    )
+
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_users_comments(skip: int, limit: int, user: User, db: AsyncSession):
+    """
+    Get users comments.
+
+    :param skip: skip
+    :type skip: int
+    :param limit: limit
+    :type limit: int
+    :param db: database connection
+    :type db: AsyncSession
+
+    :return: users comments
+    :rtype: List[Comment]
+    """
+
+    # TODO
+    stmt = select(Comment).filter_by(user_id=user.id).offset(skip).limit(limit)
+
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def block_user(email: str, block: bool, db: AsyncSession):
+    """
+    Block user.
+
+    :param email: user email
+    :type email: str
+    """
+    user = await get_user_by_email(email, db)
+    
+    if not user:
+        return None
+    
+    if user.blocked == block:
+        return user
+    
+    user.blocked = block
+    await db.commit()
+    await db.refresh(user)
+    return user
