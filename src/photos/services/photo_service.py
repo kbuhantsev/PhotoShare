@@ -155,8 +155,8 @@ async def get_photo(*, photo_id: int, db: AsyncSession) -> RowMapping | None:
 def get_search_statement(query: str, skip: int = 0, limit: int = 50) -> Select:
     statement = (
         select(Photo)
-        .join(PhotoToTag, Photo.id == PhotoToTag.photo_id)
-        .join(Tag, Tag.id == PhotoToTag.tag_id)
+        .join(PhotoToTag, Photo.id == PhotoToTag.photo_id, isouter=True)
+        .join(Tag, Tag.id == PhotoToTag.tag_id, isouter=True)
         .where(or_(Tag.name.ilike(f"%{query}%"), Photo.title.ilike(f"%{query}%")))
         .offset(skip)
         .limit(limit)
