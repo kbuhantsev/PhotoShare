@@ -4,20 +4,20 @@ from sqlalchemy import select, func, or_, RowMapping, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.photos.models import Photo
+from src.photos.models import Photo, Transformation
 from src.services.cloudinary_utils import delete_file, upload_file
 from src.tags.models import Tag, PhotoToTag
 from src.user.models import User
 
 
 async def create_photo(
-    *,
-    title: str,
-    file: BinaryIO,
-    description: str,
-    tags: list[str],
-    db: AsyncSession,
-    current_user: User,
+        *,
+        title: str,
+        file: BinaryIO,
+        description: str,
+        tags: list[str],
+        db: AsyncSession,
+        current_user: User,
 ) -> Photo | None:
     asset = upload_file(file, folder="photos")
 
@@ -52,13 +52,13 @@ async def create_photo(
 
 
 async def update_photo(
-    *,
-    photo_id: int,
-    title: str,
-    file: BinaryIO,
-    description: str,
-    tags: list[str],
-    db: AsyncSession,
+        *,
+        photo_id: int,
+        title: str,
+        file: BinaryIO,
+        description: str,
+        tags: list[str],
+        db: AsyncSession,
 ) -> RowMapping | None:
     query = select(Photo).where(Photo.id == photo_id).options(selectinload(Photo.tags))
     res = await db.execute(query)
@@ -116,16 +116,21 @@ async def delete_photo(*, photo_id: int, db: AsyncSession) -> RowMapping | None:
 
 
 async def get_photos(
-    skip: int, limit: int, query: str, db: AsyncSession
+        skip: int, limit: int, query: str, db: AsyncSession
 ) -> list[Photo]:
-
     if query:
         statement = get_search_statement(query, skip, limit)
         res = await db.execute(statement)
 
         return list(res.scalars().all())
     else:
-        statement = select(Photo).offset(skip).limit(limit).options(selectinload(Photo.tags))
+        statement = (select(Photo).
+                     offset(skip).
+                     limit(limit).
+                     options(selectinload(Photo.tags)).
+                     options(selectinload(Photo.comments)).
+                     options(selectinload(Photo.transformations))
+                     )
         res = await db.execute(statement)
         return list(res.scalars().all())
 
@@ -143,11 +148,13 @@ async def get_photos_count(query: str, db: AsyncSession) -> int:
     return total
 
 
-async def get_photo(*, photo_id: int, db: AsyncSession) -> RowMapping | None:
+async def get_photo(*, photo_id: int, db: AsyncSession) -> Photo | None:
     query = (select(Photo).
              where(Photo.id == photo_id).
-             options(selectinload(Photo.tags))
-    )
+             options(selectinload(Photo.tags)).
+             options(selectinload(Photo.comments)).
+             options(selectinload(Photo.transformations))
+             )
     res = await db.execute(query)
     return res.scalars().one_or_none()
 
@@ -161,5 +168,7 @@ def get_search_statement(query: str, skip: int = 0, limit: int = 50) -> Select:
         .offset(skip)
         .limit(limit)
         .options(selectinload(Photo.tags))
+        .options(selectinload(Photo.comments))
+        .options(selectinload(Photo.transformations))
     )
     return statement

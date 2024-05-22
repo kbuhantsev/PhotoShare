@@ -62,22 +62,8 @@ async def get_photos_handler(
     try:
         total = await get_photos_count(query=q, db=db)
         photos = await get_photos(skip=skip, limit=limit, query=q, db=db)
-        photos_data = []
-        for photo in photos:
-            tags_list = [tag.name for tag in photo.tags]
-            photos_data.append(
-                PhotoSchema(
-                    id=photo.id,
-                    title=photo.title,
-                    owner_id=photo.owner_id,
-                    public_id=photo.public_id,
-                    secure_url=photo.secure_url,
-                    folder=photo.folder,
-                    tags=tags_list if tags_list else [],
-                )
-            )
 
-        return {"total": total, "data": photos_data}
+        return {"total": total, "data": photos}
 
     except Exception as e:
         logger.error(e)
@@ -104,19 +90,7 @@ async def get_photo_by_id(
                 "message": "An error occurred while getting the photo!",
             }
 
-        tags_list = [tag.name for tag in photo.tags]
-
-        photo_data = PhotoSchema(
-            id=photo.id,
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-
-        return {"data": photo_data}
+        return {"data": photo}
     except Exception as e:
         logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -162,17 +136,7 @@ async def create_photo_handler(
                 "message": "An error occurred while creating the photo!",
             }
 
-        photo_data = PhotoSchema(
-            id=photo.id,
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-
-        return {"data": photo_data}
+        return {"data": photo}
 
     except Exception as e:
         logger.error(e)
@@ -217,16 +181,7 @@ async def update_photo_by_id(
                 "message": "An error occurred while updating the photo!",
             }
 
-        photo_data = PhotoSchema(
-            id=photo.id,
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-        return {"data": photo_data}
+        return {"data": photo}
 
     except Exception as e:
         logger.error(e)
@@ -261,18 +216,7 @@ async def delete_photo_by_id(
                 "message": "An error occurred while deleting the photo!",
             }
 
-        tags_list = [tag.name for tag in photo.tags]
-
-        photo_data = PhotoSchema(
-            id=photo.id,
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-        return {"data": photo_data}
+        return {"data": photo}
 
     except Exception as e:
         logger.error(e)
@@ -353,17 +297,7 @@ async def save_transformation(
                 "message": "An error occurred while saving qr code!",
             }
 
-        transformation_data = TransformationSchema(
-            id=transformation.id,
-            photo_id=transformation.photo_id,
-            title=transformation.title,
-            public_id=transformation.public_id,
-            secure_url=transformation.secure_url,
-            folder=transformation.folder,
-            qr_code=qr_code.secure_url,
-        )
-
-        return {"data": transformation_data}
+        return {"data": transformation}
 
     except Exception as e:
         logger.error(e)
