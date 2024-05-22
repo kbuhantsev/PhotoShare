@@ -18,10 +18,10 @@ from src.dependencies import get_current_user
 from src.photos.dependencies import allowed_delete_photo
 from src.photos.schemas import (
     PhotoResponseSchema,
-    PhotoSchema,
     PhotosResponseSchema,
-    TransformationSchema,
-    TransformationResponseSchema, TransformationsURLResponseSchema, TransformationsURLSchema,
+    TransformationResponseSchema,
+    TransformationsURLResponseSchema,
+    TransformationsURLSchema, PhotoSchema,
 )
 from src.photos.services.photo_service import (
     create_photo,
@@ -31,8 +31,16 @@ from src.photos.services.photo_service import (
     update_photo,
     get_photos_count,
 )
-from src.photos.services.transformation_service import transform, save_transform
+from src.photos.services.transformation_service import (
+    transform,
+    save_transform,
+    get_qr_code,
+)
 from src.user.models import User
+
+from src.logger import get_logger
+
+logger = get_logger("Photos")
 
 router = APIRouter(
     prefix="/photos",
@@ -42,69 +50,52 @@ router = APIRouter(
 
 @router.get("/", response_model=PhotosResponseSchema, status_code=status.HTTP_200_OK)
 async def get_photos_handler(
-    skip: int = 0, limit: int = 50, q: str = "", db: AsyncSession = Depends(get_db)
+    response: Response,
+    skip: int = 0,
+    limit: int = 50,
+    q: str = "",
+    db: AsyncSession = Depends(get_db),
 ):
-    response_model = PhotosResponseSchema()
 
     try:
         total = await get_photos_count(query=q, db=db)
         photos = await get_photos(skip=skip, limit=limit, query=q, db=db)
-        photos_data = []
-        for photo in photos:
-            tags_list = [tag.name for tag in photo.tags]
-            photos_data.append(
-                PhotoSchema(
-                    id=photo.id,
-                    title=photo.title,
-                    owner_id=photo.owner_id,
-                    public_id=photo.public_id,
-                    secure_url=photo.secure_url,
-                    folder=photo.folder,
-                    tags=tags_list if tags_list else [],
-                )
-            )
-        response_model.total = total
-        response_model.data = photos_data
+
+        return {"total": total, "data": photos}
 
     except Exception as e:
-        print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while getting the photos!"
-
-    return response_model
+        logger.error(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {
+            "status": "error",
+            "message": "An error occurred while getting the photos!",
+        }
 
 
 @router.get(
     "/{photo_id}", response_model=PhotoResponseSchema, status_code=status.HTTP_200_OK
 )
-async def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
-    response_model = PhotoResponseSchema()
+async def get_photo_by_id(
+    response: Response, photo_id: int, db: AsyncSession = Depends(get_db)
+):
 
     try:
         photo = await get_photo(photo_id=photo_id, db=db)
-        tags_list = [tag.name for tag in photo.tags]
+        if not photo:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while getting the photo!",
+            }
 
-        photo_data = PhotoSchema(
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-        response_model.data = photo_data
+        return {"data": photo}
     except Exception as e:
-        print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while getting the photo!"
-        return response_model
-
-    if not photo:
-        response_model.status = "error"
-        response_model.message = "An error occurred while getting the photo!"
-        return response_model
-
-    return response_model
+        logger.error(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {
+            "status": "error",
+            "message": "An error occurred while getting the photo!",
+        }
 
 
 @router.post(
@@ -126,8 +117,6 @@ async def create_photo_handler(
     else:
         tags_list = []
 
-    response_model = PhotoResponseSchema()
-
     try:
         photo = await create_photo(
             title=title,
@@ -138,31 +127,24 @@ async def create_photo_handler(
             current_user=current_user,
         )
 
-        photo_data = PhotoSchema(
-            id=photo.id,
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-        response_model.data = photo_data
+        if not photo:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while creating the photo!",
+            }
+
+        photo_obj = await get_photo(photo_id=photo.id, db=db)
+
+        return {"data": photo_obj}
 
     except Exception as e:
-        print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while creating the photo!"
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    if not photo:
-        response_model.status = "error"
-        response_model.message = "An error occurred while creating the photo!"
-        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    return response_model
+        return {
+            "status": "error",
+            "message": "An error occurred while creating the photo!",
+        }
 
 
 @router.put(
@@ -182,8 +164,6 @@ async def update_photo_by_id(
     else:
         tags_list = []
 
-    response_model = PhotoResponseSchema()
-
     try:
         photo = await update_photo(
             photo_id=photo_id,
@@ -194,31 +174,24 @@ async def update_photo_by_id(
             db=db,
         )
 
-        photo_data = PhotoSchema(
-            id=photo.id,
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-        response_model.data = photo_data
+        if not photo:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while updating the photo!",
+            }
+
+        photo_obj = await get_photo(photo_id=photo.id, db=db)
+
+        return {"data": photo_obj}
 
     except Exception as e:
-        print(e)
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        response_model.status = "error"
-        response_model.message = "An error occurred while updating the photo!"
-        return response_model
-
-    if not photo:
-        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        response_model.status = "error"
-        response_model.message = "An error occurred while updating the photo!"
-        return response_model
-
-    return response_model
+        return {
+            "status": "error",
+            "message": "An error occurred while updating the photo!",
+        }
 
 
 @router.delete(
@@ -236,35 +209,24 @@ async def delete_photo_by_id(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
         )
 
-    response_model = PhotoResponseSchema()
-
     try:
         photo = await delete_photo(photo_id=photo_id, db=db)
-        tags_list = [tag.name for tag in photo.tags]
+        if not photo:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while deleting the photo!",
+            }
 
-        photo_data = PhotoSchema(
-            title=photo.title,
-            owner_id=photo.owner_id,
-            public_id=photo.public_id,
-            secure_url=photo.secure_url,
-            folder=photo.folder,
-            tags=tags_list if tags_list else [],
-        )
-        response_model.data = photo_data
+        return {"data": photo}
+
     except Exception as e:
-        print(e)
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        response_model.status = "error"
-        response_model.message = "An error occurred while deleting the photo!"
-        return response_model
-
-    if not photo:
-        response.status_code = status.HTTP_403_FORBIDDEN
-        response_model.status = "error"
-        response_model.message = "An error occurred while deleting the photo!"
-        return response_model
-
-    return response_model
+        return {
+            "status": "error",
+            "message": "An error occurred while deleting the photo!",
+        }
 
 
 #  ---------------------------------------------------------
@@ -272,7 +234,9 @@ async def delete_photo_by_id(
 
 
 @router.post(
-    "/trans/{photo_id}", response_model=TransformationsURLResponseSchema, status_code=status.HTTP_200_OK
+    "/trans/{photo_id}",
+    response_model=TransformationsURLResponseSchema,
+    status_code=status.HTTP_200_OK,
 )
 async def create_transformation(
     photo_id: int,
@@ -281,64 +245,66 @@ async def create_transformation(
     db: AsyncSession = Depends(get_db),
 ):
 
-    response_model = TransformationsURLResponseSchema()
-
     try:
-        result = await transform(
-            photo_id=photo_id, transformations=transformations, db=db
-        )
+        url = await transform(photo_id=photo_id, transformations=transformations, db=db)
 
-        if not result:
+        if not url:
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            response_model.status = "error"
-            response_model.message = (
-                "An error occurred while creating the transformation!"
-            )
-            return response_model
+            return {
+                "status": "error",
+                "message": "An error occurred while creating the transformation!",
+            }
 
-        response_model.data = result
+        return {"data": url}
     except Exception as e:
-        print(e)
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        response_model.status = "error"
-        response_model.message = "An error occurred while creating the transformation!"
-        return response_model
-
-    return response_model
+        return {
+            "status": "error",
+            "message": "An error occurred while creating the transformation!",
+        }
 
 
 @router.post(
-    "/trans/save/{photo_id}", response_model=TransformationResponseSchema, status_code=status.HTTP_200_OK
+    "/trans/save/{photo_id}",
+    response_model=TransformationResponseSchema,
+    status_code=status.HTTP_200_OK,
 )
 async def save_transformation(
-        photo_id: int,
-        body: TransformationsURLSchema,
-        response: Response,
-        db: AsyncSession = Depends(get_db),
+    photo_id: int,
+    body: TransformationsURLSchema,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
 ):
-    response_model = TransformationResponseSchema()
 
     try:
 
-        transformation = await save_transform(
-            photo_id=photo_id, url=body.url, db=db
-        )
+        transformation = await save_transform(photo_id=photo_id, url=body.url, db=db)
 
         if not transformation:
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            response_model.status = "error"
-            response_model.message = (
-                "An error occurred while saving the transformation!"
-            )
-            return response_model
+            return {
+                "status": "error",
+                "message": "An error occurred while saving the photo!",
+            }
 
-        response_model.data = transformation
+        qr_code = await get_qr_code(
+            transformation_id=transformation.id, url=transformation.secure_url, db=db
+        )
+
+        if not qr_code:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while saving qr code!",
+            }
+
+        return {"data": transformation}
 
     except Exception as e:
-        print(e)
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        response_model.status = "error"
-        response_model.message = "An error occurred while saving the transformation!"
-        return response_model
-
-    return response_model
+        return {
+            "status": "error",
+            "message": "An error occurred while saving the transformation!",
+        }

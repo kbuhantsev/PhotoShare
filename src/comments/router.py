@@ -2,10 +2,19 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import src.comments.service as comment_services
-from src.comments.schemas import CommentResponseSchema, CommentSchema
+
+from src.comments.schemas import (
+    CommentResponseSchema,
+    CommentSchema,
+    CommentsResponseSchema,
+)
 from src.database import get_db
 from src.dependencies import allowed_delete_comments, get_current_user
 from src.user.models import User
+
+from src.logger import get_logger
+
+logger = get_logger("Comments")
 
 router = APIRouter(
     prefix="/comments",
@@ -39,26 +48,28 @@ async def create_comment_handler(
     :return: The created comment.
     :rtype: CommentResponseSchema
     """
-    response_model = CommentResponseSchema()
     try:
         comment_create = await comment_services.create_comment(
             comment=comment, db=db, current_user=current_user
         )
-
+        if not comment_create:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while posting the comment!",
+            }
+        return {"data": comment_create}
     except Exception as e:
-        print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while posting the comment"
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    response = CommentResponseSchema()
-    response.data = comment_create
-    return response
+        return {
+            "status": "error",
+            "message": "An error occurred while posting the comment!",
+        }
 
 
 @router.get(
-    "/{photo_id}", status_code=status.HTTP_200_OK, response_model=CommentResponseSchema
+    "/{photo_id}", status_code=status.HTTP_200_OK, response_model=CommentsResponseSchema
 )
 async def get_comments_handler(
     photo_id: int, response: Response, db: AsyncSession = Depends(get_db)
@@ -75,21 +86,23 @@ async def get_comments_handler(
     :return: The comments for the photo.
     :rtype: CommentResponseSchema
     """
-    response_model_instance = CommentResponseSchema()
     try:
-        comment_get = await comment_services.get_comments(photo_id=photo_id, db=db)
-    except Exception as e:
-        print(e)
-        response_model_instance.status = "error"
-        response_model_instance.message = (
-            "An error occurred while getting comments from this photo"
-        )
-        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model_instance
+        comments = await comment_services.get_comments(photo_id=photo_id, db=db)
+        if not comments:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while getting comments!",
+            }
+        return {"data": comments}
 
-    response = CommentResponseSchema()
-    response.data = comment_get
-    return response
+    except Exception as e:
+        logger.error(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {
+            "status": "error",
+            "message": "An error occurred while getting comments!",
+        }
 
 
 @router.put(
@@ -120,28 +133,25 @@ async def update_comment_handler(
     :return: The updated comment.
     :rtype: CommentResponseSchema
     """
-    response_model = CommentResponseSchema()
     try:
         updated_comment = await comment_services.update_comment(
             comment_id=comment_id, comment=comment, db=db, current_user=current_user
         )
+        if not updated_comment:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while updating comment",
+            }
+        return {"data": updated_comment}
+
     except Exception as e:
-        print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while updating this comment"
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    if not updated_comment:
-        response_model.status = "error"
-        response_model.message = "An error occurred while updating this comment"
-        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    response = CommentResponseSchema()
-    response.data = [updated_comment]
-
-    return response
+        return {
+            "status": "error",
+            "message": "An error occurred while updating comment",
+        }
 
 
 @router.delete(
@@ -164,25 +174,21 @@ async def delete_comment_handler(
     :return: The deleted comment.
     :rtype: CommentResponseSchema
     """
-    response_model = CommentResponseSchema()
     try:
         deleted_comment = await comment_services.delete_comment(
             comment_id=comment_id, db=db
         )
+        if not deleted_comment:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {
+                "status": "error",
+                "message": "An error occurred while deleting comment",
+            }
+        return {"data": deleted_comment}
     except Exception as e:
-        print(e)
-        response_model.status = "error"
-        response_model.message = "An error occurred while deleting this comment"
+        logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    if not deleted_comment:
-        response_model.status = "error"
-        response_model.message = "An error occurred while deleting this comment"
-        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response_model
-
-    response = CommentResponseSchema()
-    response.data = [deleted_comment]
-
-    return response
+        return {
+            "status": "error",
+            "message": "An error occurred while deleting comment",
+        }

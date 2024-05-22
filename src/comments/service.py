@@ -13,7 +13,7 @@ async def create_comment(
     comment: CommentSchema,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> CommentSchema | None:
+) -> Comment | None:
     """
     Create a new comment for a photo.
 
@@ -35,7 +35,7 @@ async def create_comment(
     await db.commit()
     await db.refresh(db_comment)
 
-    return comment
+    return db_comment
 
 
 async def get_comments(
