@@ -36,6 +36,7 @@ class UserCurrentResponseSchema(UserBaseResponseSchema):
         password: str = Field(exclude=True)
         role: Role
         avatar: Optional[str]
+        blocked: Optional[bool]
 
         @field_serializer("role")
         def serialize_role(self, role: Role) -> str:
