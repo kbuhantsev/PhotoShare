@@ -234,7 +234,7 @@ async def block_user(
 
     return {
         "data": block_user,
-        "message": f"user `{user.username}` {'blocked' if block else 'unblocked'}",
+        "message": f"user `{block_user.username}` {'blocked' if block else 'unblocked'}",
     }
 
 
