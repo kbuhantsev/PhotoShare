@@ -48,6 +48,7 @@ async def create_photo(
     db.add(photo)
     await db.commit()
     await db.refresh(photo)
+
     return photo
 
 

@@ -18,12 +18,10 @@ from src.dependencies import get_current_user
 from src.photos.dependencies import allowed_delete_photo
 from src.photos.schemas import (
     PhotoResponseSchema,
-    PhotoSchema,
     PhotosResponseSchema,
-    TransformationSchema,
     TransformationResponseSchema,
     TransformationsURLResponseSchema,
-    TransformationsURLSchema,
+    TransformationsURLSchema, PhotoSchema,
 )
 from src.photos.services.photo_service import (
     create_photo,
@@ -136,7 +134,9 @@ async def create_photo_handler(
                 "message": "An error occurred while creating the photo!",
             }
 
-        return {"data": photo}
+        photo_obj = await get_photo(photo_id=photo.id, db=db)
+
+        return {"data": photo_obj}
 
     except Exception as e:
         logger.error(e)
@@ -181,7 +181,9 @@ async def update_photo_by_id(
                 "message": "An error occurred while updating the photo!",
             }
 
-        return {"data": photo}
+        photo_obj = await get_photo(photo_id=photo.id, db=db)
+
+        return {"data": photo_obj}
 
     except Exception as e:
         logger.error(e)

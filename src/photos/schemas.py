@@ -57,9 +57,9 @@ class PhotoSchema(BaseModel):
     public_id: str
     secure_url: str
     folder: str = "photos"
-    tags: list[TagSchema] = []
-    transformations: Optional[list[TransformationSchema]] = []
-    comments: list[CommentSchema] = []
+    tags: Optional[list[TagSchema]] = None
+    transformations: Optional[list[TransformationSchema]] = None
+    comments: Optional[list[CommentSchema]] = None
 
 
 class UpdatePhotoSchema(BaseModel):
