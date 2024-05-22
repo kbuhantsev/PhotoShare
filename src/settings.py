@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     cloudinary_name: str
     cloudinary_api_key: str
     cloudinary_api_secret: str
+    cloudinary_folder: str = ""
 
     @staticmethod
     def get_db_uri():
