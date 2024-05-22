@@ -16,7 +16,7 @@ from src.user.schemas import (
 from src.photos.schemas import PhotosResponseSchema
 from src.comments.schemas import CommentResponseSchema
 from src.user import service as users
-from src.services.cloudinary_utils import upload_file
+from src.services.cloudinary_utils import upload_file, build_url
 
 router = APIRouter(
     prefix="/user",
@@ -65,10 +65,10 @@ async def update_avatar(
     :return: updated user
     :rtype: User
     """
-
-    n = os.path.splitext(file.filename)
+   
     # public_id = f"Contacts API/{user.email}"
-    avatar_url = upload_file(file, "user_avatar")
+    avatar = upload_file(file.file, "user_avatar", user.email)
+    avatar_url = build_url(avatar.get("public_id"))
     return await users.update_avatar_url(user.email, avatar_url, db)
 
 
