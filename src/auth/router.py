@@ -76,6 +76,8 @@ async def login(
         )
     # if not user.confirmed:
     #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not confirmed")
+    if user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is bloked")
     if not auth_service.verify_password(body.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password"
