@@ -65,11 +65,39 @@ async def update_avatar(
     :return: updated user
     :rtype: User
     """
-   
-    # public_id = f"Contacts API/{user.email}"
-    avatar = upload_file(file.file, "user_avatar", user.email)
-    avatar_url = build_url(avatar.get("public_id"))
-    return await users.update_avatar_url(user.email, avatar_url, db)
+
+    try:
+        avatar = upload_file(file.file, "user_avatar", user.email)
+        avatar_url = build_url(avatar.get("public_id"))
+        result = await users.update_avatar_url(user.email, avatar_url, db)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+    return {"data": result}
+
+
+@router.put("/", response_model=UserCurrentResponseSchema)
+async def update_user(
+    body: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Update user endpoint
+
+    :param body: user data
+    :type body: str
+    :param db: database session
+    :type db: AsyncSession
+    :param user: current user
+    :type user: User
+
+    :return: updated user
+    :rtype: User
+    """
+    # TODO
+    # return await users.update_user(user.email, body, db)
+    return {"data": user}
 
 
 @router.get("/profile/{username}", response_model=UserProfileResponseSchema)
