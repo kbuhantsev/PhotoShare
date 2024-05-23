@@ -1,20 +1,34 @@
 import os
-from typing import Annotated, List, Literal
-from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
+from typing import Annotated, List
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Response,
+    UploadFile,
+    HTTPException,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dependencies import get_current_user, allowed_all
 
 from src.database import get_db
 from src.user.models import User, Role
+
+from src.schemas import ResponseModel
 from src.user.schemas import (
     UserCurrentResponseSchema,
     UserProfileResponseSchema,
     UsersProfileResponseSchema,
     UsersRolesResponseShema,
+    UserUpdateSchema,
+    UserAuthPasswordResetSchema,
 )
 from src.photos.schemas import PhotosResponseSchema
 from src.comments.schemas import CommentResponseSchema
+from src.services.authentication import auth_service
 from src.user import service as users
 from src.services.cloudinary_utils import upload_file, build_url
 
@@ -40,6 +54,30 @@ async def get_current_user_data(user: User = Depends(get_current_user)):
     :rtype: User
     """
     return {"data": user}
+
+
+@router.put("/", response_model=UserCurrentResponseSchema)
+async def update_user(
+    body: UserUpdateSchema,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Update user endpoint
+
+    :param body: user data
+    :type body: str
+    :param db: database session
+    :type db: AsyncSession
+    :param user: current user
+    :type user: User
+
+    :return: updated user
+    :rtype: User
+    """
+    # TODO
+    update_user = await users.update_user(user.email, body, db)
+    return {"data": update_user}
 
 
 @router.patch(
@@ -76,32 +114,41 @@ async def update_avatar(
     return {"data": result}
 
 
-@router.put("/", response_model=UserCurrentResponseSchema)
-async def update_user(
-    body: str,
+@router.patch(
+    "/reset_password", status_code=status.HTTP_200_OK, response_model=ResponseModel
+)
+async def reset_password(
+    body: UserAuthPasswordResetSchema,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     """
-    Update user endpoint
+    Reset password endpoint
 
-    :param body: user data
+    :param body: email
     :type body: str
     :param db: database session
     :type db: AsyncSession
     :param user: current user
     :type user: User
 
-    :return: updated user
-    :rtype: User
+    :return: message
+    :rtype: dict
     """
-    # TODO
-    # return await users.update_user(user.email, body, db)
-    return {"data": user}
+    try:
+        if body.new_password != body.confirm_password:
+            raise HTTPException(status_code=400, detail="Passwords don't match")
+        hashed_password = auth_service.get_password_hash(body.new_password)
+        await users.update_password(user.email, hashed_password, db)
+        return {"message": "Password updated successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @router.get("/profile/{username}", response_model=UserProfileResponseSchema)
-async def get_profile(username: str, db: AsyncSession = Depends(get_db)):
+async def get_profile(
+    response: Response, username: str, db: AsyncSession = Depends(get_db)
+):
     """
     Get user profile endpoint
 
@@ -117,6 +164,7 @@ async def get_profile(username: str, db: AsyncSession = Depends(get_db)):
     try:
         user_data = await users.get_user_profile(username, db)
     except Exception as e:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return {"status": "error", "message": str(e)}
 
     if not user_data:
@@ -130,7 +178,9 @@ async def get_profile(username: str, db: AsyncSession = Depends(get_db)):
     dependencies=[Depends(allowed_all)],
 )
 async def get_all_users(
-    db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get all users endpoint
@@ -147,6 +197,7 @@ async def get_all_users(
     try:
         users_data = await users.get_all_users(db)
     except Exception as e:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return {"status": "error", "message": str(e)}
 
     return {"data": users_data, "total": len(users_data)}
@@ -209,35 +260,6 @@ async def get_users_comments(
     return {"data": comments}
 
 
-@router.post(
-    "/block",
-    response_model=UserCurrentResponseSchema,
-    dependencies=[Depends(allowed_all)],
-)
-async def block_user(
-    user: Annotated[str, Form(description="email user to block")],
-    block: Annotated[bool, Form()],
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Block user endpoint
-
-    :param user: current user
-    :type user: User
-    :param db: database session
-
-    """
-    try:
-        block_user = await users.block_user(user, block, db)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-    return {
-        "data": block_user,
-        "message": f"user `{block_user.username}` {'blocked' if block else 'unblocked'}",
-    }
-
-
 @router.get(
     "/roles",
     response_model=UsersRolesResponseShema,
@@ -262,11 +284,13 @@ async def get_users_roles(db: AsyncSession = Depends(get_db)):
     dependencies=[Depends(allowed_all)],
 )
 async def change_role(
-    user: Annotated[str, Form(description="email user to change")],
+    response: Response,
+    changeable_user: Annotated[str, Form(description="email user to change")],
     role: Annotated[
         str, Form(description="select new role", enum=[role.name for role in Role])
     ],
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Change user role endpoint
@@ -282,8 +306,52 @@ async def change_role(
 
     """
     try:
-        change_role = await users.update_role(user, Role[role], db)
+        changeable_user = await users.get_user_by_email(changeable_user, db)
+        if changeable_user != user:
+            change_user = await users.update_role(changeable_user, Role[role], db)
+        else:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"status": "error", "message": "You can't change your role"}
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-    return {"data": change_role}
+    return {"data": change_user}
+
+
+@router.post(
+    "/block",
+    response_model=UserCurrentResponseSchema,
+    dependencies=[Depends(allowed_all)],
+)
+async def block_user(
+    response: Response,
+    blocked_user: Annotated[str, Form(description="email user to block")],
+    block: Annotated[bool, Form(description="Flag to block or unblock user")],
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Block user endpoint
+
+    :param user: user to block
+    :type user: str
+    :param block: flag to block or unblock user
+    :type block: bool
+    :param db: database session
+
+    """
+    try:
+        blocked_user = await users.get_user_by_email(blocked_user, db)
+        if blocked_user != user:
+            block_user = await users.block_user(user, block, db)
+        else:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"status": "error", "message": "You can't block yourself"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+    return {
+        "data": block_user,
+        "message": f"user `{block_user.username}` {'blocked' if block else 'unblocked'}",
+    }

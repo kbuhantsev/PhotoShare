@@ -4,9 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.user.models import Role, User
-from src.user.schemas import UserSchema
+from src.user.schemas import UserSchema, UserUpdateSchema
 from src.photos.models import Photo
 from src.comments.models import Comment
+
 
 async def get_count_users(db: AsyncSession):
     """
@@ -65,19 +66,30 @@ async def create_user(body: UserSchema, db: AsyncSession):
     return new_user
 
 
-async def update_token(user: User, token: str | None, db: AsyncSession):
+async def update_user(email: User, body: UserUpdateSchema, db: AsyncSession):
     """
-    Update the refresh token for a user in the database.
+    Update a user in the database.
 
-    This function updates the refresh token for a user and commits the changes to the database.
+    This function updates a user in the database with the provided details.
 
     Args:
-        user (User): The user whose token is to be updated.
-        token (str | None): The new refresh token.
+        email (User): The email of the user to update.
+        body (UserUpdateSchema): The details of the user to update.
         db (AsyncSession): The database session.
+
+    Returns:
+        User: The updated user.
     """
-    user.refresh_token = token
+    user = await get_user_by_email(email, db)
+    if user is None:
+        return None
+
+    for attr, value in body.model_dump().items():
+        setattr(user, attr, value)
     await db.commit()
+    await db.refresh(user)
+
+    return user
 
 
 async def update_avatar_url(email: str, url: str | None, db: AsyncSession) -> User:
@@ -123,7 +135,7 @@ async def update_password(email: User, password: str, db: AsyncSession):
     return user
 
 
-async def update_role(email: str, role: Role, db: AsyncSession):
+async def update_role(user: User, role: Role, db: AsyncSession):
     """
     Update user role.
 
@@ -137,8 +149,6 @@ async def update_role(email: str, role: Role, db: AsyncSession):
     :return: updated user
     :rtype: User
     """
-    user = await get_user_by_email(email, db)
-
     if user.role == role:
         return user
 
@@ -148,46 +158,39 @@ async def update_role(email: str, role: Role, db: AsyncSession):
     return user
 
 
-async def get_user_profile(username: str, db: AsyncSession):
+async def update_token(user: User, token: str | None, db: AsyncSession):
     """
-    Get user profile.
+    Update the refresh token for a user in the database.
 
-    :param username: user username
-    :type username: str
-    :param db: database connection
-    :type db: AsyncSession
+    This function updates the refresh token for a user and commits the changes to the database.
 
-    :return: user
-    :rtype: User
+    Args:
+        user (User): The user whose token is to be updated.
+        token (str | None): The new refresh token.
+        db (AsyncSession): The database session.
+    """
+    user.refresh_token = token
+    await db.commit()
+
+
+async def block_user(user: User, block: bool, db: AsyncSession):
+    """
+    Block user.
+
+    :param email: user email
+    :type email: str
     """
 
-    stmt = (
-        select(
-            User,
-            func.count(Photo.id).label("count_photos"),
-            func.count(Comment.id).label("count_comments"),
-        )
-        .select_from(User)
-        .filter_by(username=username)
-        .join(Photo, isouter=True)
-        .join(Comment, User.id == Comment.user_id, isouter=True)
-        .group_by(User.id)
-    )
-
-    user_data = await db.execute(stmt)
-    user_data = user_data.mappings().first()
-
-    if not user_data:
+    if not user:
         return None
 
-    profile = {}
-    for key, value in user_data.items():
-        if isinstance(value, User) == True:
-            profile.update(**value.to_dict())
-        else:
-            profile.update({key: value})
+    if user.blocked == block:
+        return user
 
-    return profile
+    user.blocked = block
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 async def get_all_users(db: AsyncSession):
@@ -232,7 +235,49 @@ async def get_all_users(db: AsyncSession):
     return users_profiles
 
 
-async def get_users_photos(skip: int, limit: int, user: User, db: AsyncSession):
+async def get_user_profile(username: str, db: AsyncSession):
+    """
+    Get user profile.
+
+    :param username: user username
+    :type username: str
+    :param db: database connection
+    :type db: AsyncSession
+
+    :return: user
+    :rtype: User
+    """
+
+    stmt = (
+        select(
+            User,
+            func.count(Photo.id).label("count_photos"),
+            func.count(Comment.id).label("count_comments"),
+        )
+        .select_from(User)
+        .filter_by(username=username)
+        .join(Photo, isouter=True)
+        .join(Comment, User.id == Comment.user_id, isouter=True)
+        .group_by(User.id)
+    )
+
+    user_data = await db.execute(stmt)
+    user_data = user_data.mappings().first()
+
+    if not user_data:
+        return None
+
+    profile = {}
+    for key, value in user_data.items():
+        if isinstance(value, User) == True:
+            profile.update(**value.to_dict())
+        else:
+            profile.update({key: value})
+
+    return profile
+
+
+async def get_user_photos(skip: int, limit: int, user: User, db: AsyncSession):
     """
     Get users photos.
 
@@ -260,7 +305,7 @@ async def get_users_photos(skip: int, limit: int, user: User, db: AsyncSession):
     return result.scalars().all()
 
 
-async def get_users_comments(skip: int, limit: int, user: User, db: AsyncSession):
+async def get_user_comments(skip: int, limit: int, user: User, db: AsyncSession):
     """
     Get users comments.
 
@@ -280,24 +325,3 @@ async def get_users_comments(skip: int, limit: int, user: User, db: AsyncSession
 
     result = await db.execute(stmt)
     return result.scalars().all()
-
-
-async def block_user(email: str, block: bool, db: AsyncSession):
-    """
-    Block user.
-
-    :param email: user email
-    :type email: str
-    """
-    user = await get_user_by_email(email, db)
-    
-    if not user:
-        return None
-    
-    if user.blocked == block:
-        return user
-    
-    user.blocked = block
-    await db.commit()
-    await db.refresh(user)
-    return user
