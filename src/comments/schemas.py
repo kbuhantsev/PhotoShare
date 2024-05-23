@@ -1,10 +1,9 @@
+from datetime import datetime
 from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
 from src.schemas import ResponseModel
-
-from datetime import datetime
 
 
 class CommentSchema(BaseModel):

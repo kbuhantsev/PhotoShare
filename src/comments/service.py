@@ -1,18 +1,15 @@
-from fastapi import Depends
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.comments.models import Comment
 from src.comments.schemas import CommentSchema
-from src.database import get_db
-from src.dependencies import get_current_user
 from src.user.models import User
 
 
 async def create_comment(
     comment: CommentSchema,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: AsyncSession,
+    current_user: User,
 ) -> Comment | None:
     """
     Create a new comment for a photo.
@@ -38,9 +35,7 @@ async def create_comment(
     return db_comment
 
 
-async def get_comments(
-    photo_id: int, db: AsyncSession = Depends(get_db)
-) -> list[Comment]:
+async def get_comments(photo_id: int, db: AsyncSession) -> list[Comment]:
     """
     Retrieve all comments for a specific photo.
 
@@ -58,8 +53,8 @@ async def get_comments(
 async def update_comment(
     comment_id: int,
     comment: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: AsyncSession,
+    current_user: User,
 ) -> Comment | None:
     """
     Update an existing comment.
@@ -89,9 +84,7 @@ async def update_comment(
     return db_comment
 
 
-async def delete_comment(
-    comment_id: int, db: AsyncSession = Depends(get_db)
-) -> Comment | None:
+async def delete_comment(comment_id: int, db: AsyncSession) -> Comment | None:
     """
     Delete an existing comment.
 
