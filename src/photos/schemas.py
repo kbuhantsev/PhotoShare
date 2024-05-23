@@ -57,6 +57,7 @@ class TransformationsURLResponseSchema(ResponseModel):
 class PhotoSchema(BaseModel):
     id: int | None = None
     title: str
+    description: str
     owner_id: int
     public_id: str
     secure_url: str
