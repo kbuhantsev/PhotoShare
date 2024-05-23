@@ -66,7 +66,7 @@ async def create_user(body: UserSchema, db: AsyncSession):
     return new_user
 
 
-async def update_user(email: User, body: UserUpdateSchema, db: AsyncSession):
+async def update_user(email: str, body: UserUpdateSchema, db: AsyncSession):
     """
     Update a user in the database.
 
@@ -114,7 +114,7 @@ async def update_avatar_url(email: str, url: str | None, db: AsyncSession) -> Us
     return user
 
 
-async def update_password(email: User, password: str, db: AsyncSession):
+async def update_password(email: str, password: str, db: AsyncSession):
     """
     Update user password.
 
