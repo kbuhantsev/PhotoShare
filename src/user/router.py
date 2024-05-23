@@ -27,7 +27,7 @@ from src.user.schemas import (
     UsersRolesResponseShema,
 )
 from src.photos.schemas import PhotosResponseSchema
-from src.comments.schemas import CommentResponseSchema
+from src.comments.schemas import CommentsResponseSchema
 from src.services.authentication import auth_service
 from src.user import service as users
 from src.services.cloudinary_utils import upload_file, build_url
@@ -45,7 +45,7 @@ router = APIRouter(
 )
 async def get_current_user_data(user: User = Depends(get_current_user)):
     """
-    Return current user endpoint
+    Return current user
 
     :param user: current user
     :type user: User
@@ -63,7 +63,7 @@ async def update_user(
     user: User = Depends(get_current_user),
 ):
     """
-    Update user endpoint
+    Update user
 
     :param body: user data
     :type body: str
@@ -91,7 +91,7 @@ async def update_avatar(
     user: User = Depends(get_current_user),
 ):
     """
-    Update user avatar endpoint
+    Update user avatar
 
     :param file: user avatar
     :type file: UploadFile
@@ -115,7 +115,9 @@ async def update_avatar(
 
 
 @router.patch(
-    "/reset_password", status_code=status.HTTP_200_OK, response_model=ResponseModel
+    "/reset_password",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseModel,
 )
 async def reset_password(
     body: UserAuthPasswordResetSchema,
@@ -123,7 +125,7 @@ async def reset_password(
     user: User = Depends(get_current_user),
 ):
     """
-    Reset password endpoint
+    Reset user password
 
     :param body: email
     :type body: str
@@ -150,7 +152,7 @@ async def get_profile(
     response: Response, username: str, db: AsyncSession = Depends(get_db)
 ):
     """
-    Get user profile endpoint
+    Get user profile
 
     :param username: user username
     :type username: str
@@ -183,7 +185,7 @@ async def get_all_users(
     user: User = Depends(get_current_user),
 ):
     """
-    Get all users endpoint
+    Get all users
 
     :param db: database session
     :type db: AsyncSession
@@ -211,7 +213,7 @@ async def get_user_photos(
     user: User = Depends(get_current_user),
 ):
     """
-    Get user photos endpoint
+    Get user photos
 
     :param skip: skip
     :type skip: int
@@ -231,7 +233,7 @@ async def get_user_photos(
     return {"data": photos, "total": len(photos)}
 
 
-@router.get("/comments", response_model=CommentResponseSchema)
+@router.get("/comments", response_model=CommentsResponseSchema)
 async def get_user_comments(
     skip: int = 0,
     limit: int = 50,
@@ -239,7 +241,7 @@ async def get_user_comments(
     user: User = Depends(get_current_user),
 ):
     """
-    Get user comments endpoint
+    Get user comments
 
     :param skip: skip
     :type skip: int
@@ -267,7 +269,7 @@ async def get_user_comments(
 )
 async def get_users_roles(db: AsyncSession = Depends(get_db)):
     """
-    Get users roles endpoint
+    Get users roles
 
     :param db: database session
     :type db: AsyncSession
@@ -293,7 +295,7 @@ async def change_role(
     user: User = Depends(get_current_user),
 ):
     """
-    Change user role endpoint
+    Change user role
 
     :param user: email user to change
     :type user: str
@@ -332,7 +334,7 @@ async def block_user(
     user: User = Depends(get_current_user),
 ):
     """
-    Block user endpoint
+    Block user
 
     :param user: user to block
     :type user: str

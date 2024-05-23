@@ -279,7 +279,7 @@ async def get_user_profile(username: str, db: AsyncSession):
 
 async def get_user_photos(skip: int, limit: int, user: User, db: AsyncSession):
     """
-    Get users photos.
+    Get user photos.
 
     :param skip: skip
     :type skip: int
@@ -307,7 +307,7 @@ async def get_user_photos(skip: int, limit: int, user: User, db: AsyncSession):
 
 async def get_user_comments(skip: int, limit: int, user: User, db: AsyncSession):
     """
-    Get users comments.
+    Get user comments.
 
     :param skip: skip
     :type skip: int
