@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer
@@ -65,8 +65,7 @@ class UserResponseSchema(UserBaseResponseSchema):
 
 class UserCurrentResponseSchema(UserBaseResponseSchema):
 
-    class Data(UserSchema):
-        password: str = Field(exclude=True)
+    class Data(UserResponseSchema.Data):
         role: Role
         avatar: Optional[str]
         blocked: Optional[bool]
@@ -87,8 +86,8 @@ class UserCurrentResponseSchema(UserBaseResponseSchema):
 class UserProfileResponseSchema(UserCurrentResponseSchema):
 
     class Data(UserCurrentResponseSchema.Data):
-        created_at: datetime.datetime = None
-        updated_at: datetime.datetime = None
+        created_at: datetime
+        updated_at: datetime
         count_photos: int = 0
         count_comments: int = 0
 
