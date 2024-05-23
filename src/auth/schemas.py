@@ -1,7 +1,7 @@
-from src.schemas import ResponseModel
+from pydantic import BaseModel
 
 
-class TokenSchema(ResponseModel):
+class TokenSchema(BaseModel):
     """
     Pydantic model for returning access and refresh tokens.
 
@@ -16,5 +16,7 @@ class TokenSchema(ResponseModel):
     token_type: str = "bearer"
 
 
-class ForgotPasswordTokenSchema(ResponseModel):
+class ForgotPasswordTokenSchema(BaseModel):
+    """ """
+
     reset_token: str

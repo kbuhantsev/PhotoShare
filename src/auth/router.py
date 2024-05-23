@@ -12,10 +12,10 @@ from src.schemas import ResponseModel
 from src.services.authentication import auth_service
 from src.user import service as users
 from src.user.schemas import (
-    UserRequestEmailSchema,
-    UserRequestPasswordResetSchema,
-    UserResponseSchema,
     UserSchema,
+    UserEmailSchema,
+    UserResponseSchema,
+    UserPasswordResetSchema,
 )
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -45,7 +45,7 @@ async def signup(body: UserSchema, db: AsyncSession = Depends(get_db)):
     body.password = auth_service.get_password_hash(body.password)
     new_user = await users.create_user(body, db)
 
-    return new_user
+    return {"data": new_user}
 
 
 @router.post("/login", response_model=TokenSchema)
@@ -74,8 +74,8 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email"
         )
-    # if not user.confirmed:
-    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not confirmed")
+    if user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is bloked")
     if not auth_service.verify_password(body.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password"
@@ -159,7 +159,7 @@ async def refresh_token(
     # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
 )
 async def forget_password(
-    body: UserRequestEmailSchema,
+    body: UserEmailSchema,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -195,7 +195,7 @@ async def forget_password(
     # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
 )
 async def reset_password(
-    body: UserRequestPasswordResetSchema,
+    body: UserPasswordResetSchema,
     db: AsyncSession = Depends(get_db),
 ):
     """

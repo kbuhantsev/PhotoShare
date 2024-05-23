@@ -3,12 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import src.comments.service as comment_services
 from src.comments.schemas import (
-    CommentResponseSchema,
     CommentSchema,
+    CommentResponseSchema,
     CommentsResponseSchema,
 )
+
 from src.database import get_db
-from src.dependencies import allowed_delite_comments, get_current_user
+from src.dependencies import allowed_delete_comments, get_current_user
 from src.logger import get_logger
 from src.user.models import User
 
@@ -155,7 +156,7 @@ async def update_comment_handler(
 @router.delete(
     "/{comment_id}",
     response_model=CommentResponseSchema,
-    dependencies=[Depends(allowed_delite_comments)],
+    dependencies=[Depends(allowed_delete_comments)],
 )
 async def delete_comment_handler(
     response: Response, comment_id: int, db: AsyncSession = Depends(get_db)
