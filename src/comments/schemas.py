@@ -21,8 +21,6 @@ class CommentResponseSchema(ResponseModel):
         created_at: datetime
         updated_at: datetime
 
-    data: Data = None
-
 
 class CommentsResponseSchema(ResponseModel):
 
