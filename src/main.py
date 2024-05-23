@@ -37,9 +37,9 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(user_router, prefix="/api")
 app.include_router(photos_router, prefix="/api")
 app.include_router(tags_router, prefix="/api")
-app.include_router(user_router, prefix="/api")
 app.include_router(comments_router, prefix="/api")
 
 
