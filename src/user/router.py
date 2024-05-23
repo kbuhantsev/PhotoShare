@@ -1,36 +1,35 @@
 from typing import Annotated, List
+
 from fastapi import (
     APIRouter,
     Body,
     Depends,
     File,
     Form,
+    HTTPException,
     Response,
     UploadFile,
-    HTTPException,
     status,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.dependencies import get_current_user, allowed_all
-
+from src.comments.schemas import CommentsResponseSchema
 from src.database import get_db
-from src.user.models import User, Role
-
+from src.dependencies import allowed_all, get_current_user
+from src.photos.schemas import PhotosResponseSchema
 from src.schemas import ResponseModel
+from src.services.authentication import auth_service
+from src.services.cloudinary_utils import build_url, upload_file
+from src.user import service as users
+from src.user.models import Role, User
 from src.user.schemas import (
-    UserUpdateSchema,
     UserAuthPasswordResetSchema,
     UserCurrentResponseSchema,
     UserProfileResponseSchema,
     UsersProfileResponseSchema,
-    UsersRolesResponseShema,
+    UsersRolesResponseSchema,
+    UserUpdateSchema,
 )
-from src.photos.schemas import PhotosResponseSchema
-from src.comments.schemas import CommentsResponseSchema
-from src.services.authentication import auth_service
-from src.user import service as users
-from src.services.cloudinary_utils import upload_file, build_url
 
 router = APIRouter(
     prefix="/user",
@@ -76,8 +75,8 @@ async def update_user(
     :rtype: User
     """
     # TODO
-    update_user = await users.update_user(user.email, body, db)
-    return {"data": update_user}
+    updated_user = await users.update_user(user.email, body, db)
+    return {"data": updated_user}
 
 
 @router.patch(
@@ -120,7 +119,7 @@ async def update_avatar(
     response_model=ResponseModel,
 )
 async def reset_password(
-    body:UserAuthPasswordResetSchema,
+    body: UserAuthPasswordResetSchema,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -154,6 +153,7 @@ async def get_profile(
     """
     Get user profile
 
+    :param response: response object
     :param username: user username
     :type username: str
     :param db: database session
@@ -187,6 +187,7 @@ async def get_all_users(
     """
     Get all users
 
+    :param response: response object
     :param db: database session
     :type db: AsyncSession
     :param user: current user
@@ -215,6 +216,8 @@ async def get_user_photos(
     """
     Get user photos
 
+    :param user: user
+    :type user: User
     :param skip: skip
     :type skip: int
     :param limit: limit
@@ -243,6 +246,7 @@ async def get_user_comments(
     """
     Get user comments
 
+    :param user: user
     :param skip: skip
     :type skip: int
     :param limit: limit
@@ -264,7 +268,7 @@ async def get_user_comments(
 
 @router.get(
     "/roles",
-    response_model=UsersRolesResponseShema,
+    response_model=UsersRolesResponseSchema,
     dependencies=[Depends(allowed_all)],
 )
 async def get_users_roles(db: AsyncSession = Depends(get_db)):
@@ -289,7 +293,7 @@ async def change_role(
     response: Response,
     changeable_user: Annotated[str, Form(description="email user to change")],
     role: Annotated[
-        str, Form(description="select new role", enum=[role.name for role in Role])
+        str, Form(description="select new role", enum=[curr_role.name for curr_role in Role])
     ],
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -297,6 +301,8 @@ async def change_role(
     """
     Change user role
 
+    :param changeable_user: changeable user
+    :param response: response object
     :param user: email user to change
     :type user: str
     :param role: new role
@@ -326,7 +332,7 @@ async def change_role(
     response_model=UserCurrentResponseSchema,
     dependencies=[Depends(allowed_all)],
 )
-async def block_user(
+async def block_user_handler(
     response: Response,
     blocked_user: Annotated[str, Form(description="email user to block")],
     block: Annotated[bool, Form(description="Flag to block or unblock user")],
@@ -336,7 +342,8 @@ async def block_user(
     """
     Block user
 
-    :param user: user to block
+    :param response: response object
+    :param blocked_user: user to block
     :type user: str
     :param block: flag to block or unblock user
     :type block: bool

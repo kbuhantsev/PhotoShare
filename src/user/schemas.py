@@ -7,7 +7,7 @@ from src.schemas import ResponseModel
 from src.user.models import Role
 
 
-class UsersRolesResponseShema(ResponseModel):
+class UsersRolesResponseSchema(ResponseModel):
     data: List = []
 
 
@@ -71,7 +71,7 @@ class UserCurrentResponseSchema(UserBaseResponseSchema):
         blocked: Optional[bool]
 
         @field_serializer("role")
-        def serialize_role(self, role: Role) -> str:
+        def serialize_role(self, role: Role) -> str | None:
             if role is None:
                 return None
             return role.name
