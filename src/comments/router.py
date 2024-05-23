@@ -2,17 +2,16 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import src.comments.service as comment_services
-
 from src.comments.schemas import (
-    CommentResponseSchema,
     CommentSchema,
+    CommentResponseSchema,
     CommentsResponseSchema,
 )
+
 from src.database import get_db
 from src.dependencies import allowed_delete_comments, get_current_user
-from src.user.models import User
-
 from src.logger import get_logger
+from src.user.models import User
 
 logger = get_logger("Comments")
 

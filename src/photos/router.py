@@ -21,7 +21,7 @@ from src.photos.schemas import (
     PhotosResponseSchema,
     TransformationResponseSchema,
     TransformationsURLResponseSchema,
-    TransformationsURLSchema, PhotoSchema,
+    TransformationsURLSchema,
 )
 from src.photos.services.photo_service import (
     create_photo,
@@ -134,9 +134,7 @@ async def create_photo_handler(
                 "message": "An error occurred while creating the photo!",
             }
 
-        photo_obj = await get_photo(photo_id=photo.id, db=db)
-
-        return {"data": photo_obj}
+        return {"data": photo}
 
     except Exception as e:
         logger.error(e)
@@ -181,9 +179,7 @@ async def update_photo_by_id(
                 "message": "An error occurred while updating the photo!",
             }
 
-        photo_obj = await get_photo(photo_id=photo.id, db=db)
-
-        return {"data": photo_obj}
+        return {"data": photo}
 
     except Exception as e:
         logger.error(e)

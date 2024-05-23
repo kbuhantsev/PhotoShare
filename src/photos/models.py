@@ -19,15 +19,18 @@ class Photo(Base):
         "Tag",
         secondary="photos_to_tags",
         back_populates="photos",
+        lazy="selectin",
     )
     transformations: Mapped[list["Transformation"]] = relationship(
         "Transformation",
         back_populates="photo",
+        lazy="selectin",
     )
     comments: Mapped[list["Comment"]] = relationship(
         "Comment",
         primaryjoin="Comment.photo_id == Photo.id",
         back_populates="photo",
+        lazy="selectin",
     )
 
     def __repr__(self):
