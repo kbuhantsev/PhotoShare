@@ -1,7 +1,6 @@
 import datetime
-from typing import List, Literal, Optional
+from typing import List, Optional
 
-from fastapi import Query
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer
 
 from src.schemas import ResponseModel
@@ -18,6 +17,35 @@ class UserSchema(BaseModel):
     password: str = Field(min_length=8, max_length=12)
 
 
+class UserUpdateSchema(BaseModel):
+    # WTF not WORKING
+    # password: str = Field(exclude=True)
+
+    # model_config = ConfigDict(
+    #     from_attributes=True,
+    # )
+    username: str = Field(min_length=2, max_length=25)
+    email: EmailStr
+
+
+class UserEmailSchema(BaseModel):
+    email: EmailStr
+
+
+class UserAuthPasswordResetSchema(BaseModel):
+    new_password: str = Field(min_length=8, max_length=12)
+    confirm_password: str = Field(min_length=8, max_length=12)
+
+
+class UserPasswordResetSchema(UserAuthPasswordResetSchema):
+    reset_token: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+# RESPONSE
 class UserBaseResponseSchema(ResponseModel):
 
     data: UserSchema = None
@@ -78,13 +106,3 @@ class UsersProfileResponseSchema(UserProfileResponseSchema):
     model_config = ConfigDict(
         from_attributes=True,
     )
-
-
-class UserRequestEmailSchema(BaseModel):
-    email: EmailStr
-
-
-class UserRequestPasswordResetSchema(BaseModel):
-    reset_token: str
-    new_password: str
-    confirm_password: str

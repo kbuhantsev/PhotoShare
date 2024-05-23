@@ -12,8 +12,8 @@ from src.schemas import ResponseModel
 from src.services.authentication import auth_service
 from src.user import service as users
 from src.user.schemas import (
-    UserRequestEmailSchema,
-    UserRequestPasswordResetSchema,
+    UserEmailSchema,
+    UserPasswordResetSchema,
     UserResponseSchema,
     UserSchema,
 )
@@ -74,8 +74,6 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email"
         )
-    # if not user.confirmed:
-    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not confirmed")
     if user.blocked == True:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is bloked")
     if not auth_service.verify_password(body.password, user.password):
@@ -161,7 +159,7 @@ async def refresh_token(
     # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
 )
 async def forget_password(
-    body: UserRequestEmailSchema,
+    body: UserEmailSchema,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -197,7 +195,7 @@ async def forget_password(
     # dependencies=[Depends(RateLimiter(times=1, seconds=10))]
 )
 async def reset_password(
-    body: UserRequestPasswordResetSchema,
+    body: UserPasswordResetSchema,
     db: AsyncSession = Depends(get_db),
 ):
     """
