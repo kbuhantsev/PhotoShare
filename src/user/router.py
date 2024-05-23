@@ -19,12 +19,12 @@ from src.user.models import User, Role
 
 from src.schemas import ResponseModel
 from src.user.schemas import (
+    UserUpdateSchema,
+    UserAuthPasswordResetSchema,
     UserCurrentResponseSchema,
     UserProfileResponseSchema,
     UsersProfileResponseSchema,
     UsersRolesResponseShema,
-    UserUpdateSchema,
-    UserAuthPasswordResetSchema,
 )
 from src.photos.schemas import PhotosResponseSchema
 from src.comments.schemas import CommentResponseSchema

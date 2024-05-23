@@ -12,10 +12,10 @@ from src.schemas import ResponseModel
 from src.services.authentication import auth_service
 from src.user import service as users
 from src.user.schemas import (
-    UserEmailSchema,
-    UserPasswordResetSchema,
-    UserResponseSchema,
     UserSchema,
+    UserEmailSchema,
+    UserResponseSchema,
+    UserPasswordResetSchema,
 )
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
