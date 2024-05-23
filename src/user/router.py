@@ -211,7 +211,7 @@ async def get_user_photos(
     user: User = Depends(get_current_user),
 ):
     """
-    Get users photos endpoint
+    Get user photos endpoint
 
     :param skip: skip
     :type skip: int
@@ -239,7 +239,7 @@ async def get_user_comments(
     user: User = Depends(get_current_user),
 ):
     """
-    Get users comments endpoint
+    Get user comments endpoint
 
     :param skip: skip
     :type skip: int
