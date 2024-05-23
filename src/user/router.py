@@ -204,7 +204,7 @@ async def get_all_users(
 
 
 @router.get("/photos", response_model=PhotosResponseSchema)
-async def get_users_photos(
+async def get_user_photos(
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -224,7 +224,7 @@ async def get_users_photos(
     """
 
     try:
-        photos = await users.get_users_photos(skip, limit, user, db)
+        photos = await users.get_user_photos(skip, limit, user, db)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -232,7 +232,7 @@ async def get_users_photos(
 
 
 @router.get("/comments", response_model=CommentResponseSchema)
-async def get_users_comments(
+async def get_user_comments(
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -253,7 +253,7 @@ async def get_users_comments(
 
     # TODO
     try:
-        comments = await users.get_users_comments(skip, limit, user, db)
+        comments = await users.get_user_comments(skip, limit, user, db)
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
