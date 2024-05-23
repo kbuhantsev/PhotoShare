@@ -1,7 +1,7 @@
-import os
 from typing import Annotated, List
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     File,
     Form,
@@ -120,7 +120,7 @@ async def update_avatar(
     response_model=ResponseModel,
 )
 async def reset_password(
-    body: UserAuthPasswordResetSchema,
+    body:UserAuthPasswordResetSchema,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
