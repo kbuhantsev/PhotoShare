@@ -13,6 +13,15 @@ class CommentSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CommentResponseInstanceSchema(CommentSchema):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CommentResponseSchema(ResponseModel):
 
     class Data(CommentSchema):
@@ -21,7 +30,9 @@ class CommentResponseSchema(ResponseModel):
         created_at: datetime
         updated_at: datetime
 
+    data: Data = None
 
-class CommentsResponseSchema(ResponseModel):
+
+class CommentsResponseSchema(BaseModel):
 
     data: List[CommentResponseSchema.Data] = []

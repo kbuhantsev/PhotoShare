@@ -2,9 +2,9 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from src.comments.schemas import CommentSchema
+from src.comments.schemas import CommentResponseInstanceSchema
 from src.schemas import ResponseModel
-from src.tags.schemas import TagSchema
+from src.tags.schemas import TagSchema, TagResponseInstanceSchema
 
 
 class QrCodeSchema(BaseModel):
@@ -62,9 +62,9 @@ class PhotoSchema(BaseModel):
     public_id: str
     secure_url: str
     folder: str = "photos"
-    tags: list[TagSchema] | None = []
+    tags: list[TagResponseInstanceSchema] | None = []
     transformations: list[TransformationSchema] | None = []
-    comments: list[CommentSchema] | None = []
+    comments: list[CommentResponseInstanceSchema] | None = []
 
     model_config = ConfigDict(from_attributes=True)
 

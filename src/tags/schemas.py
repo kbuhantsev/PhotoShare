@@ -11,6 +11,12 @@ class TagSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TagResponseInstanceSchema(TagSchema):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class TagResponseSchema(ResponseModel):
 
     class Data(TagSchema):
