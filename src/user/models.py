@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, MetaData, String
+from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models import Base
@@ -24,6 +24,6 @@ class User(Base):
 
     def __repr__(self):
         return f"User(name={self.username}, role={self.role})"
-    
+
     def to_dict(self):
-        return {field.name:getattr(self, field.name) for field in self.__table__.c}
+        return {field.name: getattr(self, field.name) for field in self.__table__.c}

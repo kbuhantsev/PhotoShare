@@ -1,7 +1,10 @@
+from typing import List
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import Base
+from src.photos.models import Photo
 
 
 class PhotoToTag(Base):
@@ -14,9 +17,7 @@ class Tag(Base):
     __tablename__ = "tags"
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
 
-    photos: Mapped[list["Photo"]] = relationship(
-        "Photo", secondary="photos_to_tags", back_populates="tags"
-    )
+    photos: Mapped[List["Photo"]] = relationship(secondary="photos_to_tags", back_populates="tags")
 
     def __repr__(self):
         return f"Tag(name={self.name})"

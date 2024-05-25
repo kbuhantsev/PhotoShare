@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,12 +24,12 @@ class Photo(Base):
         back_populates="photos",
         lazy="selectin",
     )
-    transformations: Mapped[list["Transformation"]] = relationship(
+    transformations: Mapped[List["Transformation"]] = relationship(
         "Transformation",
         back_populates="photo",
         lazy="selectin",
     )
-    comments: Mapped[list["Comment"]] = relationship(
+    comments: Mapped[List["Comment"]] = relationship(
         "Comment",
         primaryjoin="Comment.photo_id == Photo.id",
         back_populates="photo",
@@ -82,3 +84,6 @@ class QrCode(Base):
 
     def __repr__(self):
         return f"QrCode(name={self.title})"
+
+
+# from src.comments.models import Comment

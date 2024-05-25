@@ -7,7 +7,7 @@ from src.tags.dependencies import allowed_create_tag, allowed_delete_tag
 from src.tags.schemas import TagResponseSchema, TagSchema, TagsResponseSchema
 from src.tags.service import create_tag, delete_tag, get_tags
 
-logger = get_logger("Comments")
+logger = get_logger("Tags")
 
 router = APIRouter(
     prefix="/tags",
