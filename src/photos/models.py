@@ -56,7 +56,7 @@ class Transformation(Base):
         primaryjoin="QrCode.transformation_id == Transformation.id",
         lazy="selectin",
     )
-    photo: Mapped[Photo] = relationship(
+    photo: Mapped["Photo"] = relationship(
         "Photo",
         back_populates="transformations",
     )
@@ -75,7 +75,7 @@ class QrCode(Base):
     secure_url: Mapped[str] = mapped_column(String(255))
     folder: Mapped[str] = mapped_column(String(255))
     # Alchemy
-    transformation: Mapped[Transformation] = relationship(
+    transformation: Mapped["Transformation"] = relationship(
         back_populates="qr_code",
         primaryjoin="QrCode.transformation_id == Transformation.id",
         single_parent=True,
@@ -83,3 +83,6 @@ class QrCode(Base):
 
     def __repr__(self):
         return f"QrCode(name={self.title})"
+
+
+from src.comments.models import Comment

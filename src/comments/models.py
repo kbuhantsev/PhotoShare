@@ -2,6 +2,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import Base
+from src.photos.models import Photo
 
 
 class Comment(Base):
@@ -21,3 +22,5 @@ class Comment(Base):
 
     def __repr__(self):
         return f"Comment(user_id={self.user_id}, photo_id={self.photo_id}, comment={self.comment})"
+
+

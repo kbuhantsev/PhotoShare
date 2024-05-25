@@ -17,7 +17,7 @@ class Tag(Base):
     __tablename__ = "tags"
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
 
-    photos: Mapped[List[Photo]] = relationship(secondary="photos_to_tags", back_populates="tags")
+    photos: Mapped[List["Photo"]] = relationship(secondary="photos_to_tags", back_populates="tags")
 
     def __repr__(self):
         return f"Tag(name={self.name})"
