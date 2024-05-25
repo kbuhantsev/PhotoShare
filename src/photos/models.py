@@ -17,7 +17,7 @@ class Photo(Base):
     secure_url: Mapped[str] = mapped_column(String(255))
     folder: Mapped[str] = mapped_column(String(255))
     # Alchemy
-    owner: Mapped["User"] = relationship("User", backref="photos" lazy="selectin")
+    owner: Mapped["User"] = relationship("User", backref="photos", lazy="selectin")
     tags: Mapped[List["Tag"]] = relationship(
         "Tag",
         secondary="photos_to_tags",
