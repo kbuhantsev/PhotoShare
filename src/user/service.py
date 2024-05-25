@@ -1,12 +1,11 @@
-from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.comments.models import Comment
+from src.photos.models import Photo
 from src.user.models import Role, User
 from src.user.schemas import UserSchema, UserUpdateSchema
-from src.photos.models import Photo
-from src.comments.models import Comment
 
 
 async def get_count_users(db: AsyncSession):
@@ -175,10 +174,18 @@ async def update_token(user: User, token: str | None, db: AsyncSession):
 
 async def block_user(user: User, block: bool, db: AsyncSession):
     """
-    Block user.
+    Block or unblock a user in the database.
 
-    :param email: user email
-    :type email: str
+    This function updates the blocked flag for a user and commits the changes to the database.
+
+    Args:
+        user (User): The user to block or unblock.
+        block (bool): True to block the user, False to unblock it.
+        db (AsyncSession): The database session.
+    :param user:
+    :param block:
+    :param db:
+    :return:
     """
 
     if not user:
@@ -226,7 +233,7 @@ async def get_all_users(db: AsyncSession):
     for user_data in users_data:
         profile = {}
         for key, value in user_data.items():
-            if isinstance(value, User) == True:
+            if isinstance(value, User):
                 profile.update(**value.to_dict())
             else:
                 profile.update({key: value})
@@ -269,7 +276,7 @@ async def get_user_profile(username: str, db: AsyncSession):
 
     profile = {}
     for key, value in user_data.items():
-        if isinstance(value, User) == True:
+        if isinstance(value, User):
             profile.update(**value.to_dict())
         else:
             profile.update({key: value})
@@ -281,6 +288,7 @@ async def get_user_photos(skip: int, limit: int, user: User, db: AsyncSession):
     """
     Get user photos.
 
+    :param user: user
     :param skip: skip
     :type skip: int
     :param limit: limit
@@ -309,6 +317,7 @@ async def get_user_comments(skip: int, limit: int, user: User, db: AsyncSession)
     """
     Get user comments.
 
+    :param user: user
     :param skip: skip
     :type skip: int
     :param limit: limit
