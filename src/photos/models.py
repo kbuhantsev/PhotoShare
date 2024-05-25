@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,18 +17,18 @@ class Photo(Base):
     secure_url: Mapped[str] = mapped_column(String(255))
     folder: Mapped[str] = mapped_column(String(255))
     # Alchemy
-    tags: Mapped[list["Tag"]] = relationship(
+    tags: Mapped[List["Tag"]] = relationship(
         "Tag",
         secondary="photos_to_tags",
         back_populates="photos",
         lazy="selectin",
     )
-    transformations: Mapped[list["Transformation"]] = relationship(
+    transformations: Mapped[List["Transformation"]] = relationship(
         "Transformation",
         back_populates="photo",
         lazy="selectin",
     )
-    comments: Mapped[list["Comment"]] = relationship(
+    comments: Mapped[List["Comment"]] = relationship(
         "Comment",
         primaryjoin="Comment.photo_id == Photo.id",
         back_populates="photo",
@@ -54,7 +56,7 @@ class Transformation(Base):
         primaryjoin="QrCode.transformation_id == Transformation.id",
         lazy="selectin",
     )
-    photo: Mapped["Photo"] = relationship(
+    photo: Mapped[Photo] = relationship(
         "Photo",
         back_populates="transformations",
     )
@@ -73,7 +75,7 @@ class QrCode(Base):
     secure_url: Mapped[str] = mapped_column(String(255))
     folder: Mapped[str] = mapped_column(String(255))
     # Alchemy
-    transformation: Mapped["Transformation"] = relationship(
+    transformation: Mapped[Transformation] = relationship(
         back_populates="qr_code",
         primaryjoin="QrCode.transformation_id == Transformation.id",
         single_parent=True,
