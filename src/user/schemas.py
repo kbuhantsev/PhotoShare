@@ -98,6 +98,10 @@ class UserProfileResponseSchema(UserCurrentResponseSchema):
     )
 
 
+class UserProfileInfoResponseSchema(UserProfileResponseSchema.Data):
+    pass
+
+
 class UsersProfileResponseSchema(UserProfileResponseSchema):
     data: list[UserProfileResponseSchema.Data] = []
     total: int = 0

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from src.comments.schemas import CommentResponseInstanceSchema
 from src.schemas import ResponseModel
 from src.tags.schemas import TagSchema, TagResponseInstanceSchema
+from src.user.schemas import UserProfileInfoResponseSchema
 
 
 class QrCodeSchema(BaseModel):
@@ -58,7 +59,7 @@ class PhotoSchema(BaseModel):
     id: int | None = None
     title: str
     description: str
-    owner_id: int
+    owner: UserProfileInfoResponseSchema
     public_id: str
     secure_url: str
     folder: str = "photos"
