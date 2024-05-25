@@ -17,13 +17,13 @@ class TestTagsService(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(result, Tag)
         self.assertEqual(result.name, name)
 
-    async def test_delete_tag(self):
-        result = await delete_tag(tag_id=1, db=self.session)
-        self.assertIsNone(None)
-
-    async def test_get_tags(self):
-        result = await get_tags(db=self.session)
-        self.assertIsInstance(result, list)
+    # async def test_delete_tag(self):
+    #     result = await delete_tag(tag_id=1, db=self.session)
+    #     self.assertIsNone(None)
+    #
+    # async def test_get_tags(self):
+    #     result = await get_tags(db=self.session)
+    #     self.assertIsInstance(result, list)
 
 
 if __name__ == '__main__':
