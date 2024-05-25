@@ -85,4 +85,4 @@ class QrCode(Base):
         return f"QrCode(name={self.title})"
 
 
-from src.comments.models import Comment
+# from src.comments.models import Comment
