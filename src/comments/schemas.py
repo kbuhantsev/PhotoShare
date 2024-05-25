@@ -33,6 +33,6 @@ class CommentResponseSchema(ResponseModel):
     data: Data = None
 
 
-class CommentsResponseSchema(BaseModel):
+class CommentsResponseSchema(ResponseModel):
 
     data: List[CommentResponseSchema.Data] = []

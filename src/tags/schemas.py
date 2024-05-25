@@ -18,10 +18,11 @@ class TagResponseInstanceSchema(TagSchema):
 
 
 class TagResponseSchema(ResponseModel):
-
     class Data(TagSchema):
         id: int
 
+    data: Data = None
+
 
 class TagsResponseSchema(ResponseModel):
-    data: List[TagResponseSchema] = []
+    data: List[TagResponseSchema.Data] = []
