@@ -1,88 +1,87 @@
-import unittest
-from unittest.mock import AsyncMock, patch
-from fastapi import status
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.comments.router import router
-from src.comments.schemas import CommentSchema, CommentResponseSchema
-from src.user.models import User
+import pytest_asyncio
+from starlette.datastructures import QueryParams
 
 
-client = TestClient(router)
+@pytest_asyncio.fixture()
+async def token(client, user, monkeypatch):
+    client.post("/api/auth/signup", json=user)
+
+    response = client.post(
+        "/api/auth/login",
+        data={"username": user.get("email"), "password": user.get("password")},
+    )
+
+    data = response.json()
+    return data.get("access_token")
 
 
-class TestCreateCommentHandler(unittest.IsolatedAsyncioTestCase):
+def test_create_comment_success(client, token):
+    comment = {"photo_id": 1, "comment": "Test comment"}
+    response = client.post(
+        "/api/comments",
+        json=comment,
+        headers={"Authorization": f"Bearer {token}"}
+    )
 
-    def setUp(self):
-        self.mock_db = AsyncMock(spec=AsyncSession)
-        self.mock_comment = CommentSchema(comment="Test comment", photo_id=1)
-        self.mock_user = User(id=1, username="testuser", email="test@example.com")
+    response_json = response.json()
 
-    @patch("src.comments.service.create_comment")
-    @patch("src.dependencies.get_current_user")
-    @patch("src.database.get_db")
-    async def test_create_comment_success(self, mock_get_db, mock_get_current_user, mock_create_comment):
-        mock_get_db.return_value = self.mock_db
-        mock_get_current_user.return_value = self.mock_user
-        mock_create_comment.return_value = self.mock_comment
-
-        response = client.post("/", json=self.mock_comment.dict(), headers={"Authorization": "Bearer token"})
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.json(), {"data": self.mock_comment.dict()})
-        mock_create_comment.assert_called_once_with(comment=self.mock_comment, db=self.mock_db,
-                                                    current_user=self.mock_user)
+    assert response.status_code == 201, response.text
+    assert response_json.get("data").get("photo_id") == comment.get("photo_id"), response.text
+    assert response_json.get("data").get("comment") == comment.get("comment"), response.text
+    assert response_json.get("data").get("user_id") == 1, response.text
 
 
-class TestGetCommentsHandler(unittest.IsolatedAsyncioTestCase):
+def test_get_comments_success(client):
+    photo_id = 1
+    response = client.get(f"/api/comments/{photo_id}")
 
-    def setUp(self):
-        self.mock_db = AsyncMock(spec=AsyncSession)
-        self.mock_comments = [CommentResponseSchema(id=1, content="Test comment")]
-
-    @patch("src.comments.service.get_comments")
-    @patch("src.database.get_db")
-    async def test_get_comments_success(self, mock_get_db, mock_get_comments):
-        mock_get_db.return_value = self.mock_db
-        mock_get_comments.return_value = self.mock_comments
-
-        response = client.get("/1")
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {"data": [comment.dict() for comment in self.mock_comments]})
-        mock_get_comments.assert_called_once_with(photo_id=1, db=self.mock_db)
+    assert response.status_code == 200, response.text
 
 
-    @patch("src.comments.service.update_comment")
-    @patch("src.dependencies.get_current_user")
-    @patch("src.database.get_db")
-    async def test_update_comment_success(self, mock_get_db, mock_get_current_user, mock_update_comment):
-        mock_get_db.return_value = self.mock_db
-        mock_get_current_user.return_value = self.mock_user
-        mock_update_comment.return_value = self.mock_comment
+def test_get_comments_fail(client):
+    photo_id = 999
+    response = client.get(f"/api/comments/{photo_id}")
 
-        response = client.put("/1", json={"comment": "Updated comment"}, headers={"Authorization": "Bearer token"})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {"data": self.mock_comment.dict()})
-        mock_update_comment.assert_called_once_with(comment_id=1, comment="Updated comment", db=self.mock_db,
-                                                    current_user=self.mock_user)
-
-    @patch("src.comments.service.delete_comment")
-    @patch("src.database.get_db")
-    @patch("src.dependencies.allowed_delete_comments")
-    async def test_delete_comment_success(self, mock_allowed_delete_comments, mock_get_db, mock_delete_comment):
-        mock_get_db.return_value = self.mock_db
-        mock_delete_comment.return_value = self.mock_comment
-        mock_allowed_delete_comments.return_value = None
-
-        response = client.delete("/1", headers={"Authorization": "Bearer token"})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {"data": self.mock_comment.dict()})
-        mock_delete_comment.assert_called_once_with(comment_id=1, db=self.mock_db)
+    assert response.status_code == 500, response.text
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_update_comment_success(client, token):
+    comment = {"comment_id": 1, "comment": "Updated comment"}
+    response = client.put(
+        "/api/comments/1",
+        params=QueryParams(comment=comment.get("comment")),
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    response_json = response.json()
+
+    assert response.status_code == 200, response.text
+    assert response_json.get("data").get("comment") == comment.get("comment"), response.text
+
+
+def test_update_comment_fail(client, token):
+    comment = {"comment_id": 999, "comment": "Updated comment"}
+    response = client.put(
+        "/api/comments/999",
+        params=QueryParams(comment=comment.get("comment")),
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 500, response.text
+
+
+def test_delete_comment_success(client, token):
+    response = client.delete(
+        "/api/comments/1",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+
+
+def test_delete_comment_fail(client, token):
+    response = client.delete(
+        "/api/comments/999",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 500, response.text
