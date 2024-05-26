@@ -157,6 +157,7 @@ async def update_comment_handler(
     "/{comment_id}",
     response_model=CommentResponseSchema,
     dependencies=[Depends(allowed_delete_comments)],
+    status_code=status.HTTP_200_OK,
 )
 async def delete_comment_handler(
     response: Response, comment_id: int, db: AsyncSession = Depends(get_db)
