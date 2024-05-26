@@ -1,9 +1,8 @@
 import unittest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.comments.models import Comment
 from src.user.models import User
 from src.comments.schemas import CommentSchema
 from src.comments.service import create_comment, delete_comment, get_comments
