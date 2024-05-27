@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # redis_port: int = 6379
     # redis_db: int = 0
 
-    # # CLOUDINARY
+    # CLOUDINARY
     cloudinary_name: str
     cloudinary_api_key: str
     cloudinary_api_secret: str
