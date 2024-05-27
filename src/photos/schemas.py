@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
@@ -58,14 +59,15 @@ class TransformationsURLResponseSchema(ResponseModel):
 class PhotoSchema(BaseModel):
     id: int | None = None
     title: str
+    created_at: datetime | None = None
     description: str
     owner: UserProfileInfoResponseSchema
     public_id: str
     secure_url: str
     folder: str = "photos"
-    tags: list[TagResponseInstanceSchema] | None = []
-    transformations: list[TransformationSchema] | None = []
-    comments: list[CommentResponseInstanceSchema] | None = []
+    tags: List[TagResponseInstanceSchema] | None = []
+    transformations: List[TransformationSchema] | None = []
+    comments: List[CommentResponseInstanceSchema] | None = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -73,7 +75,7 @@ class PhotoSchema(BaseModel):
 class UpdatePhotoSchema(BaseModel):
     title: str | None = None
     description: str | None = None
-    tags: list[TagSchema] | None = None
+    tags: List[TagSchema] | None = None
 
 
 class PhotoResponseSchema(ResponseModel):
