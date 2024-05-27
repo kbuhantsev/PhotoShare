@@ -1,5 +1,3 @@
-import pytest_asyncio
-
 access_token = ""
 refresh_token = ""
 reset_token = ""
