@@ -102,7 +102,6 @@ class UserProfileInfoResponseSchema(UserProfileResponseSchema.Data):
     pass
 
 
-
 class UsersProfileResponseSchema(UserProfileResponseSchema):
     data: list[UserProfileResponseSchema.Data] = []
     total: int = 0
@@ -110,19 +109,3 @@ class UsersProfileResponseSchema(UserProfileResponseSchema):
     model_config = ConfigDict(
         from_attributes=True,
     )
-
-
-# TESTS
-
-class UserResponseRefreshToken(UserSchema):
-    refresh_token: str
-
-
-class UserRequestEmailSchema(BaseModel):
-    email: EmailStr
-
-
-class UserRequestPasswordResetSchema(BaseModel):
-    reset_token: str
-    new_password: str
-    confirm_password: str

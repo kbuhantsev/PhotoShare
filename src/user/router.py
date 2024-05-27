@@ -263,7 +263,7 @@ async def get_user_comments(
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-    return {"data": comments}
+    return {"data": comments, "total": len(comments)}
 
 
 @router.get(

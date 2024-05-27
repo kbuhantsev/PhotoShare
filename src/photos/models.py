@@ -18,7 +18,7 @@ class Photo(Base):
     folder: Mapped[str] = mapped_column(String(255))
     # Alchemy
     owner: Mapped["User"] = relationship("User", backref="photos", lazy="selectin")
-    tags: Mapped[List["Tag"]] = relationship(
+    tags: Mapped[list["Tag"]] = relationship(
         "Tag",
         secondary="photos_to_tags",
         back_populates="photos",
