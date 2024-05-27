@@ -1,5 +1,3 @@
-import pytest_asyncio
-
 access_token = ""
 refresh_token = ""
 reset_token = ""
@@ -15,7 +13,7 @@ def test_signup(client, user):
     assert data["email"] == user["email"]
 
 
-def test_singup_already_exist(client, user):
+def test_signup_already_exist(client, user):
     response = client.post("/api/auth/signup", json=user)
 
     assert response.status_code == 409, response.text
@@ -143,7 +141,7 @@ def test_forget_password_invalid_email(client):
 
 
 def test_change_password_confirm_not_match(client):
-    ressponse = client.post(
+    response = client.post(
         "/api/auth/reset_password",
         json={
             "reset_token": reset_token,
@@ -152,14 +150,14 @@ def test_change_password_confirm_not_match(client):
         },
     )
 
-    assert ressponse.status_code == 400
-    data = ressponse.json()
+    assert response.status_code == 400
+    data = response.json()
     assert data["detail"]
     assert data["detail"] == "Some thing unexpected happened!"
 
 
 def test_change_password(client):
-    ressponse = client.post(
+    response = client.post(
         "/api/auth/reset_password",
         json={
             "reset_token": reset_token,
@@ -168,8 +166,8 @@ def test_change_password(client):
         },
     )
 
-    assert ressponse.status_code == 200
-    data = ressponse.json()
+    assert response.status_code == 200
+    data = response.json()
     assert data["message"]
     assert data["message"] == "Password updated successfully"
 
