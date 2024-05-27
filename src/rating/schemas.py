@@ -4,7 +4,7 @@ from src.schemas import ResponseModel
 
 
 class RatingSchema(BaseModel):
-    rating: int
+    rating: float | int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -19,3 +19,11 @@ class RatingResponseSchema(ResponseModel):
     data: Data = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class RatingAverageResponseSchema(ResponseModel):
+
+    class Data(RatingSchema):
+        photo_id: int
+
+    data: Data = None

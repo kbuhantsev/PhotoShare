@@ -41,3 +41,10 @@ async def delete_rating(db: AsyncSession, photo_id: int, user_id: int):
 
     return db_rating
 
+
+async def get_average_rating(db: AsyncSession, photo_id: int):
+    result = await db.execute(select(Rating).where(Rating.photo_id == photo_id))
+    ratings = result.scalars().all()
+    if not ratings:
+        return 0
+    return sum([rating.rating for rating in ratings]) / len(ratings)

@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_db
 from src.dependencies import get_current_user
 from src.logger import get_logger
-from src.rating.schemas import RatingResponseSchema, RatingSchema
+from src.rating.schemas import RatingResponseSchema, RatingSchema, RatingAverageResponseSchema
 from src.user.models import User
-from src.rating.service import create_update_rating, delete_rating
+from src.rating.service import create_update_rating, delete_rating, get_average_rating
 
 logger = get_logger("Rating")
 
@@ -17,15 +17,23 @@ router = APIRouter(
 
 
 @router.get(
-    "/{photo_id}", status_code=status.HTTP_200_OK, response_model=RatingResponseSchema
+    "/{photo_id}", status_code=status.HTTP_200_OK, response_model=RatingAverageResponseSchema
 )
 async def get_rating_handler(
     response: Response,
     photo_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    pass
+    try:
+        average_rating = await get_average_rating(db=db, photo_id=photo_id)
+        return {"data": {"rating": average_rating, "photo_id": photo_id}}
+    except Exception as e:
+        logger.error(e)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {
+            "status": "error",
+            "message": "An error occurred while getting rating!",
+        }
 
 
 @router.post(
