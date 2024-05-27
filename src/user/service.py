@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text, union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -210,6 +210,7 @@ async def get_all_users(db: AsyncSession):
     :return: all users
     :rtype: List[User]
     """
+
     stmt = (
         select(
             User,
@@ -218,7 +219,7 @@ async def get_all_users(db: AsyncSession):
         )
         .select_from(User)
         .join(Photo, isouter=True)
-        .join(Comment, User.id == Comment.user_id, isouter=True)
+        .join(Comment, isouter=True)
         .group_by(User.id)
     )
 
@@ -254,7 +255,7 @@ async def get_user_profile(username: str, db: AsyncSession):
     :return: user
     :rtype: User
     """
-
+    
     stmt = (
         select(
             User,
@@ -264,7 +265,7 @@ async def get_user_profile(username: str, db: AsyncSession):
         .select_from(User)
         .filter_by(username=username)
         .join(Photo, isouter=True)
-        .join(Comment, User.id == Comment.user_id, isouter=True)
+        .join(Comment, isouter=True)
         .group_by(User.id)
     )
 
