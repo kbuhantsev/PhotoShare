@@ -1,4 +1,4 @@
-from sqlalchemy import func, select, text, union
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -255,7 +255,7 @@ async def get_user_profile(username: str, db: AsyncSession):
     :return: user
     :rtype: User
     """
-    
+
     stmt = (
         select(
             User,
