@@ -36,3 +36,4 @@ class CommentResponseSchema(ResponseModel):
 class CommentsResponseSchema(ResponseModel):
 
     data: List[CommentResponseSchema.Data] = []
+    total: int = 0
