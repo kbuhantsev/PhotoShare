@@ -263,7 +263,7 @@ async def get_user_comments(
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-    return {"data": comments}
+    return {"data": comments, "total": len(comments)}
 
 
 @router.get(
@@ -353,7 +353,7 @@ async def block_user_handler(
     try:
         blocked_user = await users.get_user_by_email(blocked_user, db)
         if blocked_user != user:
-            block_user = await users.block_user(user, block, db)
+            block_user = await users.block_user(blocked_user, block, db)
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"status": "error", "message": "You can't block yourself"}

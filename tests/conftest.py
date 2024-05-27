@@ -58,6 +58,5 @@ def user():
         "username": "test",
         "email": "test@test.com",
         "password": "testtest",
-        "avatar": None,
-        "role": "USER",
+        "avatar": None
     }
