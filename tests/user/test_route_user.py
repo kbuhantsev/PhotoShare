@@ -1,9 +1,6 @@
 import pytest_asyncio
 
-from unittest.mock import MagicMock, mock_open, patch
-
-import cloudinary
-import src.services.cloudinary_utils as cloudinary_utils
+from unittest.mock import MagicMock
 
 new_user = {
     "username": "test_user",
