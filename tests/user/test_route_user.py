@@ -10,7 +10,7 @@ new_user = {
 
 
 @pytest_asyncio.fixture()
-async def token(client, user, monkeypatch):
+async def token(client, user):
     client.post("/api/auth/signup", json=user)
 
     response = client.post(
@@ -73,7 +73,7 @@ def test_update_avatar(client, token, monkeypatch):
 
     assert response.status_code == 200, response.text
     data_obj = response.json()["data"]
-    assert data_obj["avatar"] =="test_avatar_url"
+    assert data_obj["avatar"] == "test_avatar_url"
 
 
 def test_reset_password_success(client, token, user):
