@@ -1,9 +1,11 @@
 from typing import List
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, select, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from src.models import Base
+from src.rating.models import Rating
 
 
 class Photo(Base):
@@ -35,6 +37,19 @@ class Photo(Base):
         back_populates="photo",
         lazy="selectin",
     )
+    ratings: Mapped[List["Rating"]] = relationship(
+        'Rating',
+        primaryjoin='Photo.id==Rating.photo_id',
+        foreign_keys='Rating.photo_id',
+        backref='photo',
+        lazy="selectin",
+    )
+
+    @hybrid_property
+    def average_rating(self):
+        if not self.ratings:
+            return 0
+        return sum([rating.rating for rating in self.ratings]) / len(self.ratings)
 
     def __repr__(self):
         return f"Photo(title={self.title})"
@@ -84,6 +99,3 @@ class QrCode(Base):
 
     def __repr__(self):
         return f"QrCode(name={self.title})"
-
-
-# from src.comments.models import Comment

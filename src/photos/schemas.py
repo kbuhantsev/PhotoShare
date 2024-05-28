@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 
 from src.comments.schemas import CommentResponseInstanceSchema
+from src.rating.schemas import RatingSchema
 from src.schemas import ResponseModel
 from src.tags.schemas import TagSchema, TagResponseInstanceSchema
 from src.user.schemas import UserProfileInfoResponseSchema
@@ -68,6 +69,8 @@ class PhotoSchema(BaseModel):
     tags: List[TagResponseInstanceSchema] | None = []
     transformations: List[TransformationSchema] | None = []
     comments: List[CommentResponseInstanceSchema] | None = []
+    # ratings: List[RatingSchema] | None = []
+    average_rating: float | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
