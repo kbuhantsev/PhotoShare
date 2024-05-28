@@ -3,6 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.rating.models import Rating
 
+async def get_rating(db: AsyncSession, photo_id: int, user_id: int):
+    result = await db.execute(select(Rating).where(
+        and_(Rating.user_id == user_id, Rating.photo_id == photo_id)
+    ))
+    return result.scalar_one_or_none()
 
 async def create_update_rating(db: AsyncSession, photo_id: int, user_id: int, rating: int):
 
