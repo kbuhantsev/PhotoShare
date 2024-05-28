@@ -1,6 +1,6 @@
-import pytest_asyncio
-
 from unittest.mock import MagicMock
+
+import pytest_asyncio
 
 new_user = {
     "username": "test_user",

@@ -3,27 +3,27 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models import Base
-from src.user.models import User, Role
-from src.photos.models import Photo
 from src.comments.models import Comment
+from src.models import Base
+from src.photos.models import Photo
 from src.tags.models import Tag
+from src.user.models import Role, User
+from src.user.schemas import UserSchema, UserUpdateSchema
 from src.user.service import (
+    block_user,
     create_user,
+    get_all_users,
     get_count_users,
     get_user_by_email,
-    update_user,
+    get_user_comments,
+    get_user_photos,
+    get_user_profile,
     update_avatar_url,
     update_password,
     update_role,
     update_token,
-    block_user,
-    get_all_users,
-    get_user_profile,
-    get_user_comments,
-    get_user_photos,
+    update_user,
 )
-from src.user.schemas import UserSchema, UserUpdateSchema
 
 
 class TestUserService(unittest.IsolatedAsyncioTestCase):

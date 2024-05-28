@@ -1,13 +1,16 @@
 import unittest
-
 from unittest.mock import AsyncMock, MagicMock
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.user.models import User
 from src.comments.schemas import CommentSchema
-
-from src.comments.service import create_comment, delete_comment, get_comments, update_comment
+from src.comments.service import (
+    create_comment,
+    delete_comment,
+    get_comments,
+    update_comment,
+)
+from src.user.models import User
 
 
 class TestCreateCommentHandler(unittest.IsolatedAsyncioTestCase):

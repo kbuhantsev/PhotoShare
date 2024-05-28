@@ -5,6 +5,13 @@ from src.tags.models import Tag
 
 
 async def get_tags(db: AsyncSession) -> list[Tag]:
+    """
+    Retrieve all tags.
+
+    :param db: Database session dependency.
+    :param db: AsyncSession
+    :return: list of tags
+    """
     result = await db.execute(select(Tag))
     return list(result.scalars().all())
 
@@ -17,7 +24,7 @@ async def create_tag(name:str, db: AsyncSession) -> Tag:
     :type name: str
     :param db: Database session dependency.
     :type db: AsyncSession
-    :return:
+    :return: A TagModel instance indicating the result of the create operation.
     """
     tag = Tag(name=name)
 

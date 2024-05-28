@@ -1,21 +1,27 @@
 import unittest
 from unittest.mock import AsyncMock, patch
+
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, OAuth2PasswordRequestForm
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.router import reset_password, logout, signup, login, forget_password, refresh_token
-from src.services.authentication import auth_service
-
-from src.user.schemas import (
-    UserRequestPasswordResetSchema,
-    UserSchema,
-    UserResponseSchema,
-    UserRequestEmailSchema,
-    UserResponseRefreshToken
+from src.auth.router import (
+    forget_password,
+    login,
+    logout,
+    refresh_token,
+    reset_password,
+    signup,
 )
+from src.services.authentication import auth_service
 from src.user import service as users
+from src.user.schemas import (
+    UserRequestEmailSchema,
+    UserRequestPasswordResetSchema,
+    UserResponseRefreshToken,
+    UserResponseSchema,
+    UserSchema,
+)
 
 
 class TestRefreshTokenFunction(unittest.IsolatedAsyncioTestCase):

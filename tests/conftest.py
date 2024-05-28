@@ -1,18 +1,16 @@
 import asyncio
 
-from unittest.mock import AsyncMock
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-
-from src.main import app
-from src.database import get_db
-from src.models import Base
-from src.tags.models import Tag
-from src.user.models import User, Role
-from src.photos.models import Photo
 from src.comments.models import Comment
+from src.database import get_db
+from src.main import app
+from src.models import Base
+from src.photos.models import Photo
+from src.tags.models import Tag
+from src.user.models import Role, User
 
 DATABASE_TEST_URL = "sqlite+aiosqlite:///./test.db"
 
