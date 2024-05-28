@@ -4,6 +4,7 @@ from typing import List
 from pydantic import BaseModel, ConfigDict
 
 from src.schemas import ResponseModel
+from src.user.schemas import UserProfileInfoResponseSchema
 
 
 class CommentSchema(BaseModel):
@@ -15,7 +16,7 @@ class CommentSchema(BaseModel):
 
 class CommentResponseInstanceSchema(CommentSchema):
     id: int
-    user_id: int
+    user: UserProfileInfoResponseSchema
     created_at: datetime
     updated_at: datetime
 
@@ -26,7 +27,7 @@ class CommentResponseSchema(ResponseModel):
 
     class Data(CommentSchema):
         id: int
-        user_id: int
+        user: UserProfileInfoResponseSchema
         created_at: datetime
         updated_at: datetime
 

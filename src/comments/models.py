@@ -15,10 +15,13 @@ class Comment(Base):
     )
     comment: Mapped[str] = mapped_column(String(255))
     # Alchemy
+    user: Mapped["User"] = relationship("User", backref="comments", lazy="selectin")
     photo: Mapped["Photo"] = relationship(
         "Photo",
         back_populates="comments",
     )
+
+
 
     def __repr__(self):
         return f"Comment(user_id={self.user_id}, photo_id={self.photo_id}, comment={self.comment})"
