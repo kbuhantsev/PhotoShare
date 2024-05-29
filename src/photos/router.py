@@ -156,7 +156,12 @@ async def update_photo_by_id(
     description: Annotated[str, Form()] = None,
     tags: Annotated[str, Form()] = None,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Current user not found!")
+
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",")]
     else:
