@@ -88,7 +88,6 @@ async def get_comments_handler(
     try:
         comments = await comment_services.get_comments(photo_id=photo_id, db=db)
         return {"data": comments}
-
     except Exception as e:
         logger.error(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
