@@ -15,7 +15,7 @@ async def token(client, user, monkeypatch):
     return data.get("access_token")
 
 
-def test_create_comment_success(client, token):
+def test_create_comment_success(client, token, user):
     comment = {"photo_id": 1, "comment": "Test comment"}
     response = client.post(
         "/api/comments",
@@ -28,7 +28,7 @@ def test_create_comment_success(client, token):
     assert response.status_code == 201, response.text
     assert response_json.get("data").get("photo_id") == comment.get("photo_id"), response.text
     assert response_json.get("data").get("comment") == comment.get("comment"), response.text
-    assert response_json.get("data").get("user_id") == 1, response.text
+    assert response_json.get("data").get("user").get("email") == user.get("email"), response.text
 
 
 def test_get_comments_success(client):
@@ -42,7 +42,10 @@ def test_get_comments_fail(client):
     photo_id = 999
     response = client.get(f"/api/comments/{photo_id}")
 
-    assert response.status_code == 500, response.text
+    response_json = response.json()
+
+    assert response.status_code == 200, response.text
+    assert response_json.get("data") == [], response.text
 
 
 def test_update_comment_success(client, token):
