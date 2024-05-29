@@ -42,7 +42,9 @@ def upload_file(file: BinaryIO | str, folder: str, public_id: str = None):
     return asset
 
 
-def build_url(public_id: str, width: int = 300, height: int = 300, crop: str = "fill") -> str:
+def build_url(
+    public_id: str, width: int = 300, height: int = 300, crop: str = "fill"
+) -> str:
     return cloudinary.CloudinaryImage(public_id=public_id).build_url(
         width=width, height=height, crop=crop
     )

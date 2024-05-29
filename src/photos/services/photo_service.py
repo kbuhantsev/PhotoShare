@@ -27,7 +27,7 @@ async def create_photo(
         owner_id=current_user.id,
         public_id=asset.get("public_id"),
         secure_url=asset.get("secure_url"),
-        folder="photos",
+        folder=asset.get("folder"),
     )
 
     tags_arr = []
