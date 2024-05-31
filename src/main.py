@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +25,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+BASE_DIR = Path(__file__).parent.parent
+app.mount("/static", StaticFiles(directory=BASE_DIR / "dist" ), name="static")
+app.mount("/assets", StaticFiles(directory=BASE_DIR / "dist" / "assets"), name="assets")
 
 origins = [
     # "http://localhost",
@@ -47,7 +54,8 @@ app.include_router(rating_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    content = Path(BASE_DIR / "dist" / "index.html").read_text()
+    return HTMLResponse(content=content, status_code=200)
 
 
 @app.get("/api/healthchecker")
