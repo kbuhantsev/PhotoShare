@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=BASE_DIR / "dist" ), name="static")
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "dist" / "assets"), name="assets")
 
