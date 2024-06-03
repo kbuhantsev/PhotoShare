@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 BASE_DIR = Path(__file__).parent
-app.mount("/static", StaticFiles(directory=BASE_DIR / "dist" ), name="static")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "dist"), name="static")
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "dist" / "assets"), name="assets")
 
 origins = [
@@ -54,8 +54,7 @@ app.include_router(rating_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    # content = Path(BASE_DIR / "dist" / "index.html").read_text()
-    content = """<html><body><h1>Hello, World!</h1></body></html>"""
+    content = Path(BASE_DIR / "dist" / "index.html").read_text()
     return HTMLResponse(content=content, status_code=200)
 
 
