@@ -54,7 +54,8 @@ app.include_router(rating_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    content = Path(BASE_DIR / "dist" / "index.html").read_text()
+    # content = Path(BASE_DIR / "dist" / "index.html").read_text()
+    content = """<html><body><h1>Hello, World!</h1></body></html>"""
     return HTMLResponse(content=content, status_code=200)
 
 
